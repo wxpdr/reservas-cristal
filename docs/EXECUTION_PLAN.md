@@ -1,0 +1,129 @@
+# Execution Plan
+
+## Project status
+
+Discovery: completed  
+MVP specification: completed  
+User flows: completed  
+Desktop UI/UX: completed  
+Mobile UI/UX: completed  
+Base documentation: completed  
+
+The project is now entering implementation.
+
+---
+
+## Implementation order
+
+### Sprint 1 — Project foundation and authentication
+
+Status: CURRENT
+
+Goals:
+
+- initialize frontend and backend applications
+- configure repository structure
+- configure PostgreSQL connection
+- configure SQLAlchemy and Alembic
+- create initial database models
+- create initial migration
+- implement authentication
+- implement authorization
+- implement first-access invitation
+- implement password reset
+- implement server-side sessions
+- create authentication tests
+- document local development setup
+
+Do not implement the reservation UI during this sprint.
+
+---
+
+### Sprint 2 — Reservation domain
+
+Goals:
+
+- reservation CRUD
+- validation rules
+- reservation statuses
+- reservation origins
+- confirmation
+- cancellation
+- check-in
+- undo check-in
+- reservation audit events
+- backend tests for business rules
+
+---
+
+### Sprint 3 — Daily agenda
+
+Goals:
+
+- implement the main daily agenda
+- connect frontend to reservation API
+- create reservation flow
+- reservation details
+- edit reservation
+- operational actions
+- responsive desktop/mobile implementation
+- cancelled reservation visual state
+
+The daily agenda displays:
+
+- number of people
+- customer name
+- time
+- phone
+- notes
+
+---
+
+### Sprint 4 — Monthly planning
+
+Goals:
+
+- monthly calendar
+- reservation count per day
+- total people per day
+- navigation between month and daily agenda
+- exclude cancelled reservations from occupancy totals
+
+---
+
+### Sprint 5 — Administration
+
+Goals:
+
+- user management
+- pending invitations
+- resend invitation
+- deactivate users
+- audit history interface
+
+---
+
+### Sprint 6 — Production readiness
+
+Goals:
+
+- integration tests
+- security review
+- responsive review
+- error handling
+- loading and empty states
+- accessibility review
+- production environment configuration
+- deployment
+- client validation
+- production release
+
+---
+
+## Working rule
+
+Implement one sprint at a time.
+
+Do not anticipate later features unless they are technically required by the current sprint.
+
+The repository must remain runnable and testable after each sprint.

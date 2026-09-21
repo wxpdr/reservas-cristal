@@ -41,7 +41,7 @@ Do not implement the reservation UI during this sprint.
 
 ### Sprint 2 — Reservation domain
 
-Status: NEXT
+Status: COMPLETED
 
 Goals:
 
@@ -59,6 +59,8 @@ Goals:
 ---
 
 ### Sprint 3 — Daily agenda
+
+Status: NEXT
 
 Goals:
 

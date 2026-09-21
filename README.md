@@ -12,7 +12,7 @@ do Supabase; o frontend acessa apenas a API REST do FastAPI.
 ## Requisitos
 
 - Python 3.12+
-- Node.js 20+
+- Node.js 20.9+
 - PostgreSQL 15+
 
 ## Configuração

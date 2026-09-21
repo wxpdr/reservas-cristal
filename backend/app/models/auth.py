@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin, utc_now
@@ -10,9 +10,10 @@ from app.models.enums import PasswordTokenPurpose, UserRole
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
 
     name: Mapped[str] = mapped_column(String(120), nullable=False)
-    email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(320), index=True, nullable=False)
     password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(
         Enum(
@@ -28,11 +29,12 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class Session(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "sessions"
+    __table_args__ = (UniqueConstraint("token_hash", name="uq_sessions_token_hash"),)
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, nullable=False
@@ -46,11 +48,12 @@ class Session(UUIDPrimaryKeyMixin, Base):
 
 class PasswordToken(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "password_tokens"
+    __table_args__ = (UniqueConstraint("token_hash", name="uq_password_tokens_token_hash"),)
 
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
     purpose: Mapped[PasswordTokenPurpose] = mapped_column(
         Enum(
             PasswordTokenPurpose,

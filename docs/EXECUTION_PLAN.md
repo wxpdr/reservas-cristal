@@ -17,7 +17,7 @@ The project is now entering implementation.
 
 ### Sprint 1 — Project foundation and authentication
 
-Status: CURRENT
+Status: COMPLETED
 
 Goals:
 
@@ -40,6 +40,8 @@ Do not implement the reservation UI during this sprint.
 ---
 
 ### Sprint 2 — Reservation domain
+
+Status: NEXT
 
 Goals:
 

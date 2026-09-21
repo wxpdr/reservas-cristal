@@ -74,3 +74,29 @@ testable.
 Consequences:
 
 Production deployment is not complete until a delivery adapter is selected and configured.
+
+### ADR-003 — Status restored when undoing check-in
+
+Date: 2026-09-21
+
+Status: Accepted
+
+Context:
+
+The MVP requires undoing a check-in, but a reservation can reach `CHEGOU` directly from
+`AGENDADA` or from `CONFIRMADA`.
+
+Decision:
+
+When check-in is undone, restore `CONFIRMADA` if `confirmed_at` records a prior confirmation;
+otherwise restore `AGENDADA`. In both cases, clear `checked_in_at` and preserve the audit trail.
+
+Reason:
+
+The existing confirmation timestamp provides enough historical information to restore the state
+that preceded check-in without adding schema or storing transient state.
+
+Consequences:
+
+Undo check-in is deterministic and preserves prior confirmation. The `UNDO_CHECK_IN` event records
+the restored status and the cleared check-in timestamp.

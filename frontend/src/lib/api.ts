@@ -62,6 +62,10 @@ export function getReservations(date: string): Promise<Response> {
   return apiRequest(`/api/reservations?${params.toString()}`);
 }
 
+export function getReservation(reservationId: string): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}`);
+}
+
 export function logout(): Promise<Response> {
   return apiRequest("/api/auth/logout", { method: "POST" });
 }

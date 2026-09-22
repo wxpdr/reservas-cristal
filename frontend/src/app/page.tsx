@@ -1,14 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/components/app-shell";
 import { DailyAgenda } from "@/components/daily-agenda";
 import { type AuthenticatedUser, getCurrentUser, logout } from "@/lib/api";
 
 export default function Home() {
+  return <Suspense fallback={<HomeLoading />}><AuthenticatedHome /></Suspense>;
+}
+
+function AuthenticatedHome() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [authError, setAuthError] = useState("");
 
@@ -65,7 +70,11 @@ export default function Home() {
 
   return (
     <AppShell user={user} onLogout={handleLogout}>
-      <DailyAgenda onSessionExpired={() => router.replace("/login")} />
+      <DailyAgenda initialDate={searchParams.get("date") ?? undefined} onSessionExpired={() => router.replace("/login")} />
     </AppShell>
   );
+}
+
+function HomeLoading() {
+  return <main aria-busy="true" aria-label="Carregando aplicação" className="flex min-h-screen items-center justify-center bg-[#f6f3ee]"><div className="loading-dot" /></main>;
 }

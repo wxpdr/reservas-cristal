@@ -4,7 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getErrorMessage, getReservations, type Reservation } from "@/lib/api";
 
-type DailyAgendaProps = { onSessionExpired: () => void };
+type DailyAgendaProps = { initialDate?: string; onSessionExpired: () => void };
+
+const dateValuePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidDateValue(value: string | undefined): value is string {
+  if (!value || !dateValuePattern.test(value)) return false;
+  const date = dateFromValue(value);
+  return !Number.isNaN(date.getTime()) && localDateValue(date) === value;
+}
 
 function localDateValue(date: Date) {
   const year = date.getFullYear();
@@ -32,8 +40,8 @@ function formatDate(value: string) {
 const formatTime = (value: string) => value.slice(0, 5);
 const peopleLabel = (count: number) => `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
 
-export function DailyAgenda({ onSessionExpired }: DailyAgendaProps) {
-  const [selectedDate, setSelectedDate] = useState(() => localDateValue(new Date()));
+export function DailyAgenda({ initialDate, onSessionExpired }: DailyAgendaProps) {
+  const [selectedDate, setSelectedDate] = useState(() => isValidDateValue(initialDate) ? initialDate : localDateValue(new Date()));
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -91,7 +99,7 @@ export function DailyAgenda({ onSessionExpired }: DailyAgendaProps) {
         {loading ? <AgendaLoading /> : null}
         {!loading && error ? <AgendaMessage title="Não foi possível carregar a agenda" description={error}><button className="secondary-button mt-4 px-4 py-2" onClick={retry} type="button">Tentar novamente</button></AgendaMessage> : null}
         {!loading && !error && reservations.length === 0 ? <AgendaMessage title="Nenhuma reserva neste dia" description="Quando uma reserva for cadastrada para esta data, ela aparecerá aqui." /> : null}
-        {!loading && !error && reservations.length > 0 ? <ReservationList reservations={reservations} /> : null}
+        {!loading && !error && reservations.length > 0 ? <ReservationList agendaDate={selectedDate} reservations={reservations} /> : null}
       </section>
     </div>
   );
@@ -114,20 +122,20 @@ function DateControls({ selectedDate, onChange, onPrevious, onNext, onToday }: D
   );
 }
 
-function ReservationList({ reservations }: { reservations: Reservation[] }) {
-  return <><div className="hidden lg:block"><div className="reservation-grid h-8 items-center px-4 text-[13px] font-medium text-[#727870]"><span>Pessoas</span><span>Nome</span><span>Horário</span><span>Telefone</span><span>Observação</span><span /></div><div className="space-y-2.5">{reservations.map((item) => <DesktopReservation key={item.id} reservation={item} />)}</div></div><div className="space-y-2.5 lg:hidden">{reservations.map((item) => <MobileReservation key={item.id} reservation={item} />)}</div></>;
+function ReservationList({ agendaDate, reservations }: { agendaDate: string; reservations: Reservation[] }) {
+  return <><div className="hidden lg:block"><div className="reservation-grid h-8 items-center px-4 text-[13px] font-medium text-[#727870]"><span>Pessoas</span><span>Nome</span><span>Horário</span><span>Telefone</span><span>Observação</span><span /></div><div className="space-y-2.5">{reservations.map((item) => <DesktopReservation agendaDate={agendaDate} key={item.id} reservation={item} />)}</div></div><div className="space-y-2.5 lg:hidden">{reservations.map((item) => <MobileReservation agendaDate={agendaDate} key={item.id} reservation={item} />)}</div></>;
 }
 
-function DesktopReservation({ reservation }: { reservation: Reservation }) {
+function DesktopReservation({ agendaDate, reservation }: { agendaDate: string; reservation: Reservation }) {
   const cancelled = reservation.status === "CANCELADA";
   const largeGroup = reservation.party_size >= 20;
-  return <article className={`reservation-grid reservation-row ${cancelled ? "reservation-cancelled" : ""}`}><span className="font-semibold">{reservation.party_size}{largeGroup ? "  • grupo" : ""}</span><span className="truncate font-semibold">{reservation.customer_name}</span><time className={largeGroup ? "font-semibold text-[#9a5b22]" : ""}>{formatTime(reservation.reservation_time)}</time><span className="truncate text-[#727870]">{reservation.phone}</span><span className="truncate font-medium">{reservation.notes || "—"}</span><div className="flex items-center justify-end gap-2"><Link className="focus-ring rounded-lg px-3 py-2 font-semibold" href={`/reservas/${reservation.id}`}>Abrir</Link>{cancelled ? <span className="cancelled-badge">✕ Cancelada</span> : null}</div></article>;
+  return <article className={`reservation-grid reservation-row ${cancelled ? "reservation-cancelled" : ""}`}><span className="font-semibold">{reservation.party_size}{largeGroup ? "  • grupo" : ""}</span><span className="truncate font-semibold">{reservation.customer_name}</span><time className={largeGroup ? "font-semibold text-[#9a5b22]" : ""}>{formatTime(reservation.reservation_time)}</time><span className="truncate text-[#727870]">{reservation.phone}</span><span className="truncate font-medium">{reservation.notes || "—"}</span><div className="flex items-center justify-end gap-2"><Link className="focus-ring rounded-lg px-3 py-2 font-semibold" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{cancelled ? <span className="cancelled-badge">✕ Cancelada</span> : null}</div></article>;
 }
 
-function MobileReservation({ reservation }: { reservation: Reservation }) {
+function MobileReservation({ agendaDate, reservation }: { agendaDate: string; reservation: Reservation }) {
   const cancelled = reservation.status === "CANCELADA";
   const largeGroup = reservation.party_size >= 20;
-  return <article className={`mobile-reservation ${cancelled ? "reservation-cancelled" : ""}`}>{cancelled ? <span className="cancelled-badge absolute right-4 top-3">✕ Cancelada</span> : null}<time className="block text-lg font-semibold leading-tight">{formatTime(reservation.reservation_time)}</time><h2 className={`mt-1 font-semibold ${cancelled ? "pr-28" : ""}`}>{reservation.customer_name}</h2><div className="mt-2.5 grid grid-cols-[100px_1fr] gap-3"><span className={`meta-chip ${largeGroup ? "bg-[#fff1d8]" : ""}`}>{peopleLabel(reservation.party_size)}</span><span className="meta-chip truncate">{reservation.phone}</span></div><p className={`mt-2 rounded-lg border px-2.5 py-2 text-[11px] text-[#727870] ${cancelled ? "border-[#ebb0b0] bg-[#fde3e3]" : "border-[#e3ddd4] bg-[#faf9f6]"}`}>Obs. {reservation.notes || "Sem observações"}</p><div className="mt-2.5 flex justify-end gap-2 border-t border-[#e3ddd4] pt-2.5"><Link className="secondary-button flex h-8 min-w-[70px] items-center justify-center text-xs" href={`/reservas/${reservation.id}`}>Abrir</Link>{!cancelled ? <button className="h-8 min-w-[132px] cursor-not-allowed rounded-[9px] bg-[#3f7450] px-3 text-xs font-semibold text-white opacity-80" disabled title="A confirmação de chegada será implementada na próxima etapa" type="button">Marcar chegada</button> : null}</div></article>;
+  return <article className={`mobile-reservation ${cancelled ? "reservation-cancelled" : ""}`}>{cancelled ? <span className="cancelled-badge absolute right-4 top-3">✕ Cancelada</span> : null}<time className="block text-lg font-semibold leading-tight">{formatTime(reservation.reservation_time)}</time><h2 className={`mt-1 font-semibold ${cancelled ? "pr-28" : ""}`}>{reservation.customer_name}</h2><div className="mt-2.5 grid grid-cols-[100px_1fr] gap-3"><span className={`meta-chip ${largeGroup ? "bg-[#fff1d8]" : ""}`}>{peopleLabel(reservation.party_size)}</span><span className="meta-chip truncate">{reservation.phone}</span></div><p className={`mt-2 rounded-lg border px-2.5 py-2 text-[11px] text-[#727870] ${cancelled ? "border-[#ebb0b0] bg-[#fde3e3]" : "border-[#e3ddd4] bg-[#faf9f6]"}`}>Obs. {reservation.notes || "Sem observações"}</p><div className="mt-2.5 flex justify-end gap-2 border-t border-[#e3ddd4] pt-2.5"><Link className="secondary-button flex h-8 min-w-[70px] items-center justify-center text-xs" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{!cancelled ? <button className="h-8 min-w-[132px] cursor-not-allowed rounded-[9px] bg-[#3f7450] px-3 text-xs font-semibold text-white opacity-80" disabled title="A confirmação de chegada será implementada na próxima etapa" type="button">Marcar chegada</button> : null}</div></article>;
 }
 
 function AgendaLoading() {

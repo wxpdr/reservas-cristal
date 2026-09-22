@@ -90,6 +90,19 @@ npm run dev
 Abra `http://localhost:3000`. A documentação interativa da API fica em
 `http://localhost:8000/docs`.
 
+### Dados fictícios para validar a Agenda do Dia
+
+Somente no ambiente DEV, execute manualmente o script abaixo para criar reservas fictícias na data
+atual. O script reutiliza os serviços do domínio, gera auditoria e ignora os registros do próprio
+seed que já existirem:
+
+```powershell
+cd backend
+python -m app.scripts.seed_dev_reservations --confirm-dev
+```
+
+O comando usa o banco configurado no ambiente atual. Não o execute apontando para produção.
+
 ## Verificações
 
 Backend, em `backend/`:

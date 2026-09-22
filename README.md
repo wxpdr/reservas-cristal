@@ -25,6 +25,21 @@ uma connection string PostgreSQL compatível com psycopg, mantendo o prefixo
 Copy-Item .env.example .env
 ```
 
+Para entrega real de convites e recuperação em desenvolvimento, configure no `.env` usado pelo
+backend uma conta Gmail exclusiva de teste e uma senha de app do Google:
+
+```dotenv
+FRONTEND_URL=http://localhost:3000
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=seu-email-de-teste@gmail.com
+SMTP_PASSWORD=sua-senha-de-app
+SMTP_FROM=seu-email-de-teste@gmail.com
+```
+
+O Gmail exige autenticação em duas etapas e uma senha de app; não use a senha normal da conta.
+Se as variáveis SMTP forem omitidas, o backend usa o adaptador local que exibe o link no terminal.
+
 Instale o backend:
 
 ```powershell
@@ -50,9 +65,9 @@ cd backend
 alembic upgrade head
 ```
 
-O primeiro administrador é criado por um comando local e também define a própria senha. O adaptador
-de e-mail de desenvolvimento imprime o link temporário no terminal; o token bruto nunca é salvo no
-banco.
+O primeiro administrador é criado por um comando local e também define a própria senha. Com SMTP
+configurado, o link temporário é enviado ao endereço do usuário; sem SMTP, ele aparece no terminal.
+O token bruto nunca é salvo no banco.
 
 ```powershell
 python -m app.scripts.create_admin --name "Nome do administrador" --email "admin@exemplo.com"
@@ -109,5 +124,5 @@ npm run build
 - `POST /api/users` (somente administrador)
 - `GET /health`
 
-Em produção, configure `SESSION_COOKIE_SECURE=true` e substitua o adaptador de e-mail de
-desenvolvimento por uma implementação do contrato `EmailSender`.
+Em produção, configure `SESSION_COOKIE_SECURE=true` e use credenciais de entrega apropriadas ao
+ambiente. O provider SMTP e os adaptadores de desenvolvimento implementam o mesmo `EmailSender`.

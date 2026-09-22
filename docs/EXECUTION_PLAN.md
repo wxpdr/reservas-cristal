@@ -60,7 +60,14 @@ Goals:
 
 ### Sprint 3 — Daily agenda
 
-Status: NEXT
+Status: IN PROGRESS
+
+Current progress:
+
+- authenticated application shell
+- responsive daily agenda connected to the reservation API
+- loading, empty, error and cancelled-reservation states
+- reservation creation, full details, editing and operational action dialogs remain pending
 
 Goals:
 

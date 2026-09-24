@@ -26,7 +26,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f3ee] text-[#202421] lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
+    <div className="min-h-screen bg-[#f6f3ee] text-[#202421] lg:grid lg:h-screen lg:min-h-0 lg:grid-cols-[232px_minmax(0,1fr)] lg:overflow-hidden">
       <header className="relative flex h-[72px] items-center justify-between bg-[#252b27] px-[18px] text-white lg:hidden">
         <div className="flex items-center gap-3">
           <Image
@@ -75,7 +75,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
         ) : null}
       </header>
 
-      <aside className="hidden min-h-screen flex-col bg-[#252b27] px-6 pb-6 pt-7 text-white lg:flex">
+      <aside className="hidden flex-col bg-[#252b27] px-6 pb-6 pt-7 text-white lg:flex lg:h-full lg:min-h-0">
         <div className="flex h-[72px] items-center gap-3">
           <Image
             src="/img/logo-round.svg"
@@ -125,7 +125,7 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
         </div>
       </aside>
 
-      <main className="min-w-0">{children}</main>
+      <main className="min-w-0 lg:h-full lg:overflow-y-auto">{children}</main>
     </div>
   );
 }

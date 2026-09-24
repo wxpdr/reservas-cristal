@@ -14,7 +14,11 @@ import {
   type Reservation,
 } from "@/lib/api";
 
-type ReservationDetailsPageProps = { agendaDate?: string; reservationId: string };
+type ReservationDetailsPageProps = {
+  agendaDate?: string;
+  reservationId: string;
+  reservationUpdated?: boolean;
+};
 
 const statusLabels: Record<Reservation["status"], string> = {
   AGENDADA: "Agendada",
@@ -44,7 +48,11 @@ function peopleLabel(count: number) {
   return `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
 }
 
-export function ReservationDetailsPage({ agendaDate, reservationId }: ReservationDetailsPageProps) {
+export function ReservationDetailsPage({
+  agendaDate,
+  reservationId,
+  reservationUpdated = false,
+}: ReservationDetailsPageProps) {
   const router = useRouter();
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
@@ -132,15 +140,31 @@ export function ReservationDetailsPage({ agendaDate, reservationId }: Reservatio
 
   return (
     <AppShell onLogout={handleLogout} user={user}>
-      <ReservationDetails agendaDate={agendaDate} reservation={reservation} />
+      <ReservationDetails
+        agendaDate={agendaDate}
+        reservation={reservation}
+        reservationUpdated={reservationUpdated}
+      />
     </AppShell>
   );
 }
 
-function ReservationDetails({ agendaDate, reservation }: { agendaDate?: string; reservation: Reservation }) {
+function ReservationDetails({
+  agendaDate,
+  reservation,
+  reservationUpdated,
+}: {
+  agendaDate?: string;
+  reservation: Reservation;
+  reservationUpdated: boolean;
+}) {
   const cancelled = reservation.status === "CANCELADA";
   const largeGroup = reservation.party_size >= 20;
   const agendaHref = agendaDate ? `/?date=${encodeURIComponent(agendaDate)}` : "/";
+  const editParams = new URLSearchParams();
+  if (agendaDate) editParams.set("date", agendaDate);
+  const editQuery = editParams.toString();
+  const editHref = `/reservas/${encodeURIComponent(reservation.id)}/editar${editQuery ? `?${editQuery}` : ""}`;
 
   return (
     <div className="px-4 pb-10 pt-4 lg:px-9 lg:py-8">
@@ -153,6 +177,8 @@ function ReservationDetails({ agendaDate, reservation }: { agendaDate?: string; 
           <span className="lg:hidden">Voltar</span><span className="hidden lg:inline">Voltar à agenda</span>
         </Link>
       </header>
+
+      {reservationUpdated ? <p className="mt-3 rounded-xl border border-[#b8d3bf] bg-[#e9f3eb] px-4 py-3 text-sm font-medium text-[#2f6240]" role="status">Reserva atualizada com sucesso.</p> : null}
 
       <section className={`relative mt-3 rounded-[14px] border p-4 lg:mt-4 lg:flex lg:min-h-[142px] lg:items-start lg:justify-between lg:rounded-2xl lg:px-6 lg:py-[22px] ${cancelled ? "border-[#de7575] bg-[#fff1f1]" : "border-[#e3ddd4] bg-white"}`}>
         <div>
@@ -197,7 +223,7 @@ function ReservationDetails({ agendaDate, reservation }: { agendaDate?: string; 
         </section>
       </div>
 
-      <FutureActions cancelled={cancelled} />
+      <FutureActions cancelled={cancelled} editHref={editHref} />
       <p className="mt-3 hidden min-h-[54px] items-center rounded-xl bg-[#f0ece6] px-3.5 text-xs font-medium text-[#727870] lg:flex">A mesa pode ser atribuída ou alterada a qualquer momento. Ações relevantes ficam registradas no histórico.</p>
     </div>
   );
@@ -207,17 +233,17 @@ function Info({ accent = false, label, value }: { accent?: boolean; label: strin
   return <div><dt className="text-[10px] font-medium text-[#7a807a] lg:text-[11px]">{label}</dt><dd className={`mt-1.5 text-[13px] font-semibold lg:text-sm ${accent ? "text-[#a64f43]" : "text-[#202421]"}`}>{value}</dd></div>;
 }
 
-function FutureActions({ cancelled }: { cancelled: boolean }) {
+function FutureActions({ cancelled, editHref }: { cancelled: boolean; editHref: string }) {
   return (
     <section className="mt-3 rounded-[14px] border border-[#e3ddd4] bg-white p-4 lg:flex lg:min-h-[74px] lg:items-center lg:border-0 lg:bg-transparent lg:p-0">
       <h2 className="text-[17px] font-semibold lg:sr-only">Ações</h2>
       <div className="mt-3 grid grid-cols-[92px_1fr] gap-2 lg:mt-0 lg:flex lg:w-full lg:items-center">
-        <button className="secondary-button h-9 text-xs disabled:cursor-not-allowed disabled:opacity-60 lg:order-2 lg:ml-auto lg:h-10 lg:px-4 lg:text-sm" disabled title="Edição será implementada em uma próxima etapa" type="button">Editar</button>
+        <Link className="secondary-button focus-ring flex h-9 items-center justify-center text-xs lg:order-2 lg:ml-auto lg:h-10 lg:px-4 lg:text-sm" href={editHref}>Editar</Link>
         {!cancelled ? <button className="h-9 rounded-[9px] bg-[#a64f43] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 lg:order-3 lg:h-10 lg:text-sm" disabled title="Confirmação será implementada em uma próxima etapa" type="button">Confirmar reserva</button> : null}
         {!cancelled ? <button className="col-span-2 h-9 rounded-[9px] bg-[#3f7450] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 lg:order-4 lg:h-10 lg:text-sm" disabled title="Check-in será implementado em uma próxima etapa" type="button">Marcar chegada</button> : null}
         {!cancelled ? <button className="col-span-2 h-6 text-[11px] font-semibold text-[#a64f43] disabled:cursor-not-allowed disabled:opacity-60 lg:order-1 lg:h-10 lg:rounded-[10px] lg:border lg:border-[#e7b9b5] lg:bg-white lg:px-4 lg:text-sm" disabled title="Cancelamento será implementado em uma próxima etapa" type="button">Cancelar reserva</button> : null}
       </div>
-      <p className="sr-only">As ações operacionais ainda não estão disponíveis nesta etapa.</p>
+      <p className="sr-only">Confirmação, chegada e cancelamento ainda não estão disponíveis nesta etapa.</p>
     </section>
   );
 }

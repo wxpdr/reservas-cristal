@@ -64,6 +64,8 @@ export type ReservationCreate = {
   notes: string | null;
 };
 
+export type ReservationUpdate = ReservationCreate;
+
 export function getCurrentUser(): Promise<Response> {
   return apiRequest("/api/auth/me");
 }
@@ -80,6 +82,16 @@ export function getReservation(reservationId: string): Promise<Response> {
 export function createReservation(payload: ReservationCreate): Promise<Response> {
   return apiRequest("/api/reservations", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateReservation(
+  reservationId: string,
+  payload: ReservationUpdate,
+): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 }

@@ -69,7 +69,8 @@ Current progress:
 - loading, empty, error and cancelled-reservation states
 - responsive, read-only reservation details connected to the reservation API
 - responsive reservation creation connected to the reservation API
-- editing and operational action dialogs remain pending
+- responsive reservation editing connected to the reservation API
+- operational action dialogs remain pending
 
 Goals:
 

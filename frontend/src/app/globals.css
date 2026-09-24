@@ -43,8 +43,11 @@ textarea.form-control { min-height: 72px; resize: vertical; }
 .date-button { border: 1px solid #e3ddd4; border-radius: 10px; background: white; font-weight: 600; }
 .date-button { display: flex; width: 36px; height: 32px; flex: none; align-items: center; justify-content: center; }
 
-.reservation-grid { display: grid; grid-template-columns: 60px minmax(100px, 1.2fr) 60px 110px minmax(100px, 2fr) 190px; gap: 8px; }
+.reservation-grid { display: grid; grid-template-columns: 90px minmax(120px, 210px) 80px 80px 160px minmax(100px, 1fr) 174px; gap: 8px; }
 .reservation-row { position: relative; min-height: 72px; align-items: center; overflow: hidden; border: 1px solid #e3ddd4; border-radius: 14px; background: white; padding: 16px; font-size: 13px; }
+.reservation-arrived { border: 1.5px solid #8eb99a; background: #f0f7f1; }
+.reservation-arrived::before { position: absolute; top: 10px; bottom: 10px; left: 0; width: 5px; border-radius: 0 4px 4px 0; background: #3f7450; content: ""; }
+.arrived-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; background: #3f7450; padding: 4px 12px; color: white; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .reservation-cancelled { border: 1.5px solid #de7575; background: #fff1f1; }
 .reservation-cancelled::before { position: absolute; top: 10px; bottom: 10px; left: 0; width: 5px; border-radius: 0 4px 4px 0; background: #c23b3b; content: ""; }
 .cancelled-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; background: #c23b3b; padding: 4px 12px; color: white; font-size: 11px; font-weight: 600; white-space: nowrap; }

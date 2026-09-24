@@ -41,6 +41,12 @@ function formatDate(value: string) {
 
 const formatTime = (value: string) => value.slice(0, 5);
 const peopleLabel = (count: number) => `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
+const statusOrder: Record<Reservation["status"], number> = {
+  AGENDADA: 0,
+  CONFIRMADA: 0,
+  CHEGOU: 1,
+  CANCELADA: 2,
+};
 
 export function DailyAgenda({ initialDate, onSessionExpired, reservationCreated = false }: DailyAgendaProps) {
   const router = useRouter();
@@ -188,20 +194,28 @@ function DateControls({ selectedDate, onChange, onPrevious, onNext, onToday }: D
 }
 
 function ReservationList({ agendaDate, onAction, reservations }: { agendaDate: string; onAction: (reservation: Reservation, action: "check-in" | "undo-check-in", trigger: HTMLButtonElement) => void; reservations: Reservation[] }) {
-  return <><div className="hidden lg:block"><div className="reservation-grid h-8 items-center px-4 text-[13px] font-medium text-[#727870]"><span>Pessoas</span><span>Nome</span><span>Horário</span><span>Telefone</span><span>Observação</span><span /></div><div className="space-y-2.5">{reservations.map((item) => <DesktopReservation agendaDate={agendaDate} key={item.id} reservation={item} />)}</div></div><div className="space-y-2.5 lg:hidden">{reservations.map((item) => <MobileReservation agendaDate={agendaDate} key={item.id} onAction={onAction} reservation={item} />)}</div></>;
+  const orderedReservations = useMemo(
+    () => [...reservations].sort((left, right) => statusOrder[left.status] - statusOrder[right.status]
+      || left.reservation_time.localeCompare(right.reservation_time)),
+    [reservations],
+  );
+  return <><div className="hidden lg:block"><div className="reservation-grid h-8 items-center px-4 text-[13px] font-medium text-[#727870]"><span>Pessoas</span><span>Nome</span><span>Horário</span><span>Mesa</span><span>Telefone</span><span>Observação</span><span /></div><div className="space-y-2.5">{orderedReservations.map((item) => <DesktopReservation agendaDate={agendaDate} key={item.id} reservation={item} />)}</div></div><div className="space-y-2.5 lg:hidden">{orderedReservations.map((item) => <MobileReservation agendaDate={agendaDate} key={item.id} onAction={onAction} reservation={item} />)}</div></>;
 }
 
 function DesktopReservation({ agendaDate, reservation }: { agendaDate: string; reservation: Reservation }) {
   const cancelled = reservation.status === "CANCELADA";
+  const arrived = reservation.status === "CHEGOU";
   const largeGroup = reservation.party_size >= 20;
-  return <article className={`reservation-grid reservation-row ${cancelled ? "reservation-cancelled" : ""}`}><span className="font-semibold">{reservation.party_size}{largeGroup ? "  • grupo" : ""}</span><span className="truncate font-semibold">{reservation.customer_name}</span><time className={largeGroup ? "font-semibold text-[#9a5b22]" : ""}>{formatTime(reservation.reservation_time)}</time><span className="truncate text-[#727870]">{reservation.phone}</span><span className="truncate font-medium">{reservation.notes || "—"}</span><div className="flex items-center justify-end gap-2"><Link className="focus-ring rounded-lg px-3 py-2 font-semibold" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{cancelled ? <span className="cancelled-badge">✕ Cancelada</span> : null}</div></article>;
+  const stateClass = cancelled ? "reservation-cancelled" : arrived ? "reservation-arrived" : "";
+  return <article className={`reservation-grid reservation-row ${stateClass}`}><span className="font-semibold">{reservation.party_size}{largeGroup ? "  • grupo" : ""}</span><span className="truncate font-semibold">{reservation.customer_name}</span><time className={largeGroup ? "font-semibold text-[#9a5b22]" : ""}>{formatTime(reservation.reservation_time)}</time><span className={largeGroup ? "truncate font-semibold text-[#9a5b22]" : "truncate"}>Mesa {reservation.table_label || "—"}</span><span className="truncate text-[#727870]">{reservation.phone}</span><span className="truncate font-medium">{reservation.notes || "—"}</span><div className="flex items-center justify-end gap-2"><Link className="focus-ring rounded-lg px-3 py-2 font-semibold" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{arrived ? <span className="arrived-badge">✓ Chegou</span> : null}{cancelled ? <span className="cancelled-badge">✕ Cancelada</span> : null}</div></article>;
 }
 
 function MobileReservation({ agendaDate, onAction, reservation }: { agendaDate: string; onAction: (reservation: Reservation, action: "check-in" | "undo-check-in", trigger: HTMLButtonElement) => void; reservation: Reservation }) {
   const cancelled = reservation.status === "CANCELADA";
   const largeGroup = reservation.party_size >= 20;
   const arrived = reservation.status === "CHEGOU";
-  return <article className={`mobile-reservation ${cancelled ? "reservation-cancelled" : ""}`}>{cancelled ? <span className="cancelled-badge absolute right-4 top-3">✕ Cancelada</span> : null}<time className="block text-lg font-semibold leading-tight">{formatTime(reservation.reservation_time)}</time><h2 className={`mt-1 font-semibold ${cancelled ? "pr-28" : ""}`}>{reservation.customer_name}</h2><div className="mt-2.5 grid grid-cols-[100px_1fr] gap-3"><span className={`meta-chip ${largeGroup ? "bg-[#fff1d8]" : ""}`}>{peopleLabel(reservation.party_size)}</span><span className="meta-chip truncate">{reservation.phone}</span></div><p className={`mt-2 rounded-lg border px-2.5 py-2 text-[11px] text-[#727870] ${cancelled ? "border-[#ebb0b0] bg-[#fde3e3]" : "border-[#e3ddd4] bg-[#faf9f6]"}`}>Obs. {reservation.notes || "Sem observações"}</p><div className="mt-2.5 flex justify-end gap-2 border-t border-[#e3ddd4] pt-2.5"><Link className="secondary-button flex h-8 min-w-[70px] items-center justify-center text-xs" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{!cancelled ? <button className={`focus-ring h-8 min-w-[132px] rounded-[9px] px-3 text-xs font-semibold ${arrived ? "border border-[#9eb9a6] bg-white text-[#3f7450]" : "bg-[#3f7450] text-white"}`} onClick={(event) => onAction(reservation, arrived ? "undo-check-in" : "check-in", event.currentTarget)} type="button">{arrived ? "Desfazer chegada" : "Marcar chegada"}</button> : null}</div></article>;
+  const stateClass = cancelled ? "reservation-cancelled" : arrived ? "reservation-arrived" : "";
+  return <article className={`mobile-reservation ${stateClass}`}>{arrived ? <span className="arrived-badge absolute right-4 top-3">✓ Chegou</span> : null}{cancelled ? <span className="cancelled-badge absolute right-4 top-3">✕ Cancelada</span> : null}<time className="block text-lg font-semibold leading-tight">{formatTime(reservation.reservation_time)}</time><h2 className={`mt-1 font-semibold ${arrived || cancelled ? "pr-28" : ""}`}>{reservation.customer_name}</h2><div className="mt-2.5 grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] gap-3"><span className={`meta-chip truncate ${largeGroup ? "bg-[#fff1d8] text-[#9a5b22]" : ""}`}>{peopleLabel(reservation.party_size)} • Mesa {reservation.table_label || "—"}</span><span className="meta-chip truncate">{reservation.phone}</span></div><p className={`mt-2 rounded-lg border px-2.5 py-2 text-[11px] text-[#727870] ${cancelled ? "border-[#ebb0b0] bg-[#fde3e3]" : arrived ? "border-[#b8d3bf] bg-[#edf6ef]" : "border-[#e3ddd4] bg-[#faf9f6]"}`}>Obs. {reservation.notes || "Sem observações"}</p><div className="mt-2.5 flex justify-end gap-2 border-t border-[#e3ddd4] pt-2.5"><Link className="secondary-button flex h-8 min-w-[70px] items-center justify-center text-xs" href={`/reservas/${reservation.id}?date=${agendaDate}`}>Abrir</Link>{!cancelled ? <button className={`focus-ring h-8 min-w-[132px] rounded-[9px] px-3 text-xs font-semibold ${arrived ? "border border-[#9eb9a6] bg-white text-[#3f7450]" : "bg-[#3f7450] text-white"}`} onClick={(event) => onAction(reservation, arrived ? "undo-check-in" : "check-in", event.currentTarget)} type="button">{arrived ? "Desfazer chegada" : "Marcar chegada"}</button> : null}</div></article>;
 }
 
 function AgendaLoading() {

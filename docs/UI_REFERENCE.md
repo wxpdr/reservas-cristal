@@ -27,12 +27,19 @@ Main visual language:
 
 Cancelled reservations must be strongly visible using a pale red card/row, red accent and explicit Cancelada indicator.
 
+Arrived reservations use a pale green card/row, green accent and an explicit `Chegou` indicator.
+
+The daily agenda is visually ordered by operational state: scheduled/confirmed reservations first,
+arrived reservations next, and cancelled reservations last. Time remains ascending inside each group.
+
 The daily agenda only exposes:
 
 people
 name
 time
 phone
+table
 notes
 
-Do not add additional information to the primary reservation list without a product decision.
+Table is an operational field in the primary reservation list. An undefined table remains valid and
+is shown discreetly.

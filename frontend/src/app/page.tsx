@@ -70,7 +70,11 @@ function AuthenticatedHome() {
 
   return (
     <AppShell user={user} onLogout={handleLogout}>
-      <DailyAgenda initialDate={searchParams.get("date") ?? undefined} onSessionExpired={() => router.replace("/login")} />
+      <DailyAgenda
+        initialDate={searchParams.get("date") ?? undefined}
+        onSessionExpired={() => router.replace("/login")}
+        reservationCreated={searchParams.get("created") === "1"}
+      />
     </AppShell>
   );
 }

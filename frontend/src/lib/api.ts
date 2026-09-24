@@ -53,6 +53,17 @@ export type Reservation = {
   updated_at: string;
 };
 
+export type ReservationCreate = {
+  customer_name: string;
+  phone: string;
+  party_size: number;
+  reservation_date: string;
+  reservation_time: string;
+  origin: Reservation["origin"];
+  table_label: string | null;
+  notes: string | null;
+};
+
 export function getCurrentUser(): Promise<Response> {
   return apiRequest("/api/auth/me");
 }
@@ -64,6 +75,13 @@ export function getReservations(date: string): Promise<Response> {
 
 export function getReservation(reservationId: string): Promise<Response> {
   return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}`);
+}
+
+export function createReservation(payload: ReservationCreate): Promise<Response> {
+  return apiRequest("/api/reservations", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function logout(): Promise<Response> {

@@ -23,10 +23,20 @@ input { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled),
 a { cursor: pointer; }
 
+textarea,
+select { font: inherit; }
+
 .focus-ring:focus-visible,
 button:focus-visible,
 a:focus-visible,
-input:focus-visible { outline: 3px solid rgb(166 79 67 / 35%); outline-offset: 2px; }
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible { outline: 3px solid rgb(166 79 67 / 35%); outline-offset: 2px; }
+
+.form-control { width: 100%; min-height: 39px; border: 1px solid #ded8cf; border-radius: 9px; background: white; padding: 9px 11px; color: #202421; font-size: 12px; }
+.form-control::placeholder { color: #8b908a; opacity: 1; }
+.form-control[aria-invalid="true"] { border-color: #c95d57; }
+textarea.form-control { min-height: 72px; resize: vertical; }
 
 .primary-button { border-radius: 10px; background: #a64f43; color: white; font-weight: 600; }
 .secondary-button,
@@ -50,3 +60,4 @@ input:focus-visible { outline: 3px solid rgb(166 79 67 / 35%); outline-offset: 2
 @keyframes pulse { 50% { opacity: 0.35; transform: scale(0.8); } }
 
 @media (min-width: 64rem) { .date-button { width: 40px; height: 40px; } }
+@media (min-width: 64rem) { .form-control { min-height: 46px; border-radius: 10px; padding: 12px 14px; font-size: 13px; } textarea.form-control { height: 46px; min-height: 46px; } }

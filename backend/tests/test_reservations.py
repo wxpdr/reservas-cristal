@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from fastapi.testclient import TestClient
@@ -33,7 +33,7 @@ def reservation_payload(**overrides: Any) -> dict[str, Any]:
 def create_reservation(client: TestClient, **overrides: Any) -> dict[str, Any]:
     response = client.post("/api/reservations", json=reservation_payload(**overrides))
     assert response.status_code == 201, response.text
-    return response.json()
+    return cast(dict[str, Any], response.json())
 
 
 def actions_for(db: Session, reservation_id: str) -> list[ReservationAction]:

@@ -68,7 +68,8 @@ Current progress:
 - responsive daily agenda connected to the reservation API
 - loading, empty, error and cancelled-reservation states
 - responsive, read-only reservation details connected to the reservation API
-- reservation creation, editing and operational action dialogs remain pending
+- responsive reservation creation connected to the reservation API
+- editing and operational action dialogs remain pending
 
 Goals:
 

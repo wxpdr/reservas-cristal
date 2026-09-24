@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getErrorMessage, getReservations, type Reservation } from "@/lib/api";
 
-type DailyAgendaProps = { initialDate?: string; onSessionExpired: () => void };
+type DailyAgendaProps = { initialDate?: string; onSessionExpired: () => void; reservationCreated?: boolean };
 
 const dateValuePattern = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -40,7 +40,7 @@ function formatDate(value: string) {
 const formatTime = (value: string) => value.slice(0, 5);
 const peopleLabel = (count: number) => `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
 
-export function DailyAgenda({ initialDate, onSessionExpired }: DailyAgendaProps) {
+export function DailyAgenda({ initialDate, onSessionExpired, reservationCreated = false }: DailyAgendaProps) {
   const [selectedDate, setSelectedDate] = useState(() => isValidDateValue(initialDate) ? initialDate : localDateValue(new Date()));
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,8 +89,10 @@ export function DailyAgenda({ initialDate, onSessionExpired }: DailyAgendaProps)
           <h1 className="text-2xl font-semibold lg:text-[28px]"><span className="lg:hidden">{isToday ? "Reservas de hoje" : "Reservas do dia"}</span><span className="hidden lg:inline">Reservas</span></h1>
           <p className="mt-1 text-xs text-[#727870] lg:text-[13px]"><span className="lg:hidden">{reservations.length} {reservations.length === 1 ? "reserva" : "reservas"} • {peopleCount} {peopleCount === 1 ? "pessoa" : "pessoas"}</span><span className="hidden lg:inline">Acompanhe e organize o atendimento do dia.</span></p>
         </div>
-        <button className="primary-button h-8 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-80 lg:h-10 lg:px-3.5 lg:text-sm" disabled title="Fluxo de nova reserva será implementado na próxima etapa" type="button"><span className="lg:hidden">+ Nova</span><span className="hidden lg:inline">+ Nova reserva</span></button>
+        <Link className="primary-button focus-ring flex h-8 items-center px-4 text-xs lg:h-10 lg:px-3.5 lg:text-sm" href={`/reservas/nova?date=${selectedDate}`}><span className="lg:hidden">+ Nova</span><span className="hidden lg:inline">+ Nova reserva</span></Link>
       </header>
+
+      {reservationCreated ? <p className="mt-3 rounded-xl border border-[#b8d3bf] bg-[#e9f3eb] px-4 py-3 text-sm font-medium text-[#2f6240]" role="status">Reserva criada com sucesso.</p> : null}
 
       <DateControls selectedDate={selectedDate} onChange={selectDate} onPrevious={() => selectDate(moveDate(selectedDate, -1))} onNext={() => selectDate(moveDate(selectedDate, 1))} onToday={() => selectDate(localDateValue(new Date()))} />
 

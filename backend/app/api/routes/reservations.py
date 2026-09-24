@@ -8,6 +8,7 @@ from app.api.dependencies import require_operator
 from app.db.session import get_db
 from app.models import User
 from app.schemas.reservation import (
+    MonthlyReservationSummary,
     ReservationCancellation,
     ReservationCreate,
     ReservationResponse,
@@ -44,6 +45,24 @@ def list_reservations(
 ) -> list[ReservationResponse]:
     reservations = reservation_service.list_reservations_by_date(db, reservation_date)
     return [ReservationResponse.model_validate(reservation) for reservation in reservations]
+
+
+@router.get("/monthly", response_model=list[MonthlyReservationSummary])
+def list_monthly_reservations(
+    year: int = Query(ge=1, le=9999),
+    month: int = Query(ge=1, le=12),
+    db: DatabaseSession = Depends(get_db),
+    _: User = Depends(require_operator),
+) -> list[MonthlyReservationSummary]:
+    summaries = reservation_service.list_monthly_reservation_summary(db, year, month)
+    return [
+        MonthlyReservationSummary(
+            date=day,
+            reservation_count=reservation_count,
+            people_count=people_count,
+        )
+        for day, reservation_count, people_count in summaries
+    ]
 
 
 @router.get("/{reservation_id}", response_model=ReservationResponse)

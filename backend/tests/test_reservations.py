@@ -116,6 +116,40 @@ def test_get_by_id_and_list_day_are_ordered_and_keep_cancelled(
     assert other_day["id"] not in {item["id"] for item in listed}
 
 
+def test_monthly_summary_groups_active_reservations_and_excludes_cancelled(
+    client: TestClient, admin: User
+) -> None:
+    login(client, admin)
+    create_reservation(client, reservation_date="2026-09-05", party_size=4)
+    create_reservation(client, reservation_date="2026-09-05", party_size=6)
+    confirmed = create_reservation(client, reservation_date="2026-09-06", party_size=3)
+    arrived = create_reservation(client, reservation_date="2026-09-06", party_size=5)
+    cancelled = create_reservation(client, reservation_date="2026-09-05", party_size=20)
+    create_reservation(client, reservation_date="2026-10-05", party_size=99)
+
+    assert client.post(f"/api/reservations/{confirmed['id']}/confirm").status_code == 200
+    assert client.post(f"/api/reservations/{arrived['id']}/check-in").status_code == 200
+    assert client.post(f"/api/reservations/{cancelled['id']}/cancel", json={}).status_code == 200
+
+    response = client.get("/api/reservations/monthly", params={"year": 2026, "month": 9})
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {"date": "2026-09-05", "reservation_count": 2, "people_count": 10},
+        {"date": "2026-09-06", "reservation_count": 2, "people_count": 8},
+    ]
+
+
+def test_monthly_summary_requires_authentication_and_valid_month(
+    client: TestClient, admin: User
+) -> None:
+    unauthenticated = client.get("/api/reservations/monthly", params={"year": 2026, "month": 9})
+    assert unauthenticated.status_code == 401
+    login(client, admin)
+    invalid_month = client.get("/api/reservations/monthly", params={"year": 2026, "month": 13})
+    assert invalid_month.status_code == 422
+
+
 def test_edit_records_only_changed_fields_and_does_not_accept_status(
     client: TestClient, db: Session, operator: User
 ) -> None:

@@ -98,6 +98,8 @@ The daily agenda displays:
 
 ### Sprint 4 — Monthly planning
 
+Status: COMPLETED
+
 Goals:
 
 - monthly calendar

@@ -27,7 +27,8 @@ export default function LoginPage() {
       setError(await getErrorMessage(response));
       return;
     }
-    router.push("/");
+    router.replace("/");
+    router.refresh();
   }
 
   return (
@@ -59,4 +60,3 @@ export default function LoginPage() {
     </AuthShell>
   );
 }
-

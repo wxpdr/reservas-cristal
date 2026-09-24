@@ -60,7 +60,20 @@ Goals:
 
 ### Sprint 3 — Daily agenda
 
-Status: NEXT
+Status: COMPLETED
+
+Current progress:
+
+- authenticated application shell
+- responsive daily agenda connected to the reservation API
+- loading, empty, error and cancelled-reservation states
+- responsive, read-only reservation details connected to the reservation API
+- responsive reservation creation connected to the reservation API
+- responsive reservation editing connected to the reservation API
+- reservation confirmation with an accessible confirmation dialog
+- check-in and undo check-in from mobile agenda and reservation details, with accessible confirmation dialogs
+- reservation cancellation from details, with optional reason and an accessible confirmation dialog
+- final integrated desktop/mobile review completed
 
 Goals:
 

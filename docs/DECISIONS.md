@@ -63,8 +63,9 @@ Invitation and password recovery need delivery, but the MVP does not select an e
 
 Decision:
 
-Define a small `EmailSender` interface. Development uses a logging adapter that prints generated
-links; production must provide another adapter without changing authentication rules.
+Define a small `EmailSender` interface. An SMTP adapter with STARTTLS supports real delivery using
+environment configuration. The logging adapter remains the fallback when SMTP is not configured,
+and automated tests use an in-memory adapter.
 
 Reason:
 
@@ -73,7 +74,8 @@ testable.
 
 Consequences:
 
-Production deployment is not complete until a delivery adapter is selected and configured.
+Authentication rules and token storage remain independent from email transport. SMTP credentials
+are server-only secrets, and partial SMTP configuration prevents the backend from starting.
 
 ### ADR-003 — Status restored when undoing check-in
 

@@ -112,6 +112,8 @@ Goals:
 
 ### Sprint 5 — Administration
 
+Status: COMPLETED
+
 Goals:
 
 - user management

@@ -135,6 +135,10 @@ npm run build
 - `POST /api/auth/password-reset/request`
 - `POST /api/auth/password-reset/complete`
 - `POST /api/users` (somente administrador)
+- `GET /api/users` (somente administrador)
+- `PATCH /api/users/{id}` (somente administrador)
+- `POST /api/users/{id}/resend-invitation` (somente administrador)
+- `GET /api/audit/reservation-events` (somente administrador)
 - `POST /api/reservations`
 - `GET /api/reservations?date=YYYY-MM-DD`
 - `GET /api/reservations/monthly?year=YYYY&month=M`

@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { AuthenticatedUser } from "@/lib/api";
 
 type AppShellProps = {
@@ -17,6 +18,12 @@ function roleLabel(role: AuthenticatedUser["role"]) {
 
 export function AppShell({ user, onLogout, children }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const reservationsActive = !pathname.startsWith("/usuarios") && !pathname.startsWith("/historico");
+
+  function navClass(active: boolean) {
+    return `focus-ring flex h-11 items-center gap-2.5 rounded-[10px] px-3.5 text-sm ${active ? "bg-[#313833] font-semibold text-white" : "text-[#d2d7d2]"}`;
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f3ee] text-[#202421] lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
@@ -48,6 +55,10 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
 
         {menuOpen ? (
           <div className="absolute right-4 top-16 z-20 w-56 rounded-xl border border-[#475048] bg-[#252b27] p-3 shadow-xl">
+            <nav aria-label="Navegação móvel" className="mb-3 space-y-1 border-b border-[#475048] pb-3">
+              <Link className="focus-ring block min-h-10 rounded-lg px-3 py-2 text-sm" href="/" onClick={() => setMenuOpen(false)}>Reservas</Link>
+              {user.role === "admin" ? <><Link className="focus-ring block min-h-10 rounded-lg px-3 py-2 text-sm" href="/usuarios" onClick={() => setMenuOpen(false)}>Usuários</Link><Link className="focus-ring block min-h-10 rounded-lg px-3 py-2 text-sm" href="/historico" onClick={() => setMenuOpen(false)}>Histórico</Link></> : null}
+            </nav>
             <p className="truncate text-sm font-semibold">{user.name}</p>
             <p className="mt-0.5 text-xs text-[#aeb6af]">
               {roleLabel(user.role)}
@@ -82,23 +93,15 @@ export function AppShell({ user, onLogout, children }: AppShellProps) {
 
         <nav aria-label="Navegação principal" className="mt-7 space-y-2">
           <Link
-            aria-current="page"
-            className="focus-ring flex h-11 items-center gap-2.5 rounded-[10px] bg-[#313833] px-3.5 text-sm font-semibold"
+            aria-current={reservationsActive ? "page" : undefined}
+            className={navClass(reservationsActive)}
             href="/"
           >
             <span className="size-2 rounded-full bg-[#b75a4d]" />
             Reservas
           </Link>
 
-          <span className="flex h-11 items-center gap-2.5 px-3.5 text-sm text-[#8f9890]">
-            <span className="size-2 rounded-full bg-[#89928a]" />
-            Usuários
-          </span>
-
-          <span className="flex h-11 items-center gap-2.5 px-3.5 text-sm text-[#8f9890]">
-            <span className="size-2 rounded-full bg-[#89928a]" />
-            Histórico
-          </span>
+          {user.role === "admin" ? <><Link aria-current={pathname.startsWith("/usuarios") ? "page" : undefined} className={navClass(pathname.startsWith("/usuarios"))} href="/usuarios"><span className="size-2 rounded-full bg-[#89928a]" />Usuários</Link><Link aria-current={pathname.startsWith("/historico") ? "page" : undefined} className={navClass(pathname.startsWith("/historico"))} href="/historico"><span className="size-2 rounded-full bg-[#89928a]" />Histórico</Link></> : null}
         </nav>
 
         <div className="mt-auto rounded-xl bg-[#313833] px-3.5 py-2.5">

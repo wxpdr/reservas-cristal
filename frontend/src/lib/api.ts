@@ -32,6 +32,27 @@ export type AuthenticatedUser = {
   updated_at: string;
 };
 
+export type UserCreate = {
+  name: string;
+  email: string;
+  role: AuthenticatedUser["role"];
+};
+
+export type UserUpdate = Partial<UserCreate> & { active?: boolean };
+
+export type AuditEvent = {
+  id: string;
+  reservation_id: string;
+  reservation_customer_name: string;
+  reservation_date: string;
+  user_id: string;
+  user_name: string;
+  user_role: AuthenticatedUser["role"];
+  action: "CREATE" | "UPDATE" | "CONFIRM" | "CHECK_IN" | "UNDO_CHECK_IN" | "CANCEL" | "TABLE_CHANGE";
+  changes: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export type Reservation = {
   id: string;
   customer_name: string;
@@ -74,6 +95,40 @@ export type MonthlyReservationSummary = {
 
 export function getCurrentUser(): Promise<Response> {
   return apiRequest("/api/auth/me");
+}
+
+export function getUsers(): Promise<Response> {
+  return apiRequest("/api/users");
+}
+
+export function createUser(payload: UserCreate): Promise<Response> {
+  return apiRequest("/api/users", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateUser(userId: string, payload: UserUpdate): Promise<Response> {
+  return apiRequest(`/api/users/${encodeURIComponent(userId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function resendUserInvitation(userId: string): Promise<Response> {
+  return apiRequest(`/api/users/${encodeURIComponent(userId)}/resend-invitation`, {
+    method: "POST",
+  });
+}
+
+export function getAuditEvents(filters: {
+  date?: string;
+  userId?: string;
+  action?: string;
+}): Promise<Response> {
+  const params = new URLSearchParams();
+  if (filters.date) params.set("date", filters.date);
+  if (filters.userId) params.set("user_id", filters.userId);
+  if (filters.action) params.set("action", filters.action);
+  const query = params.toString();
+  return apiRequest(`/api/audit/reservation-events${query ? `?${query}` : ""}`);
 }
 
 export function getReservations(date: string): Promise<Response> {

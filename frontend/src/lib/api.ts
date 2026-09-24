@@ -66,6 +66,12 @@ export type ReservationCreate = {
 
 export type ReservationUpdate = ReservationCreate;
 
+export type MonthlyReservationSummary = {
+  date: string;
+  reservation_count: number;
+  people_count: number;
+};
+
 export function getCurrentUser(): Promise<Response> {
   return apiRequest("/api/auth/me");
 }
@@ -73,6 +79,11 @@ export function getCurrentUser(): Promise<Response> {
 export function getReservations(date: string): Promise<Response> {
   const params = new URLSearchParams({ date });
   return apiRequest(`/api/reservations?${params.toString()}`);
+}
+
+export function getMonthlyReservations(year: number, month: number): Promise<Response> {
+  const params = new URLSearchParams({ year: String(year), month: String(month) });
+  return apiRequest(`/api/reservations/monthly?${params.toString()}`);
 }
 
 export function getReservation(reservationId: string): Promise<Response> {

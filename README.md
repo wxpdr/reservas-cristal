@@ -137,6 +137,7 @@ npm run build
 - `POST /api/users` (somente administrador)
 - `POST /api/reservations`
 - `GET /api/reservations?date=YYYY-MM-DD`
+- `GET /api/reservations/monthly?year=YYYY&month=M`
 - `GET /api/reservations/{id}`
 - `PATCH /api/reservations/{id}`
 - `POST /api/reservations/{id}/confirm`

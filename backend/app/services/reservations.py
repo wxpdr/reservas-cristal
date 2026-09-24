@@ -1,9 +1,10 @@
+from calendar import monthrange
 from datetime import date, datetime, time
 from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DatabaseSession
 
 from app.models import Reservation, ReservationEvent, User
@@ -111,6 +112,27 @@ def list_reservations_by_date(db: DatabaseSession, reservation_date: date) -> li
             .order_by(Reservation.reservation_time.asc(), Reservation.created_at.asc())
         )
     )
+
+
+def list_monthly_reservation_summary(
+    db: DatabaseSession, year: int, month: int
+) -> list[tuple[date, int, int]]:
+    first_day = date(year, month, 1)
+    last_day = date(year, month, monthrange(year, month)[1])
+    rows = db.execute(
+        select(
+            Reservation.reservation_date,
+            func.count(Reservation.id),
+            func.sum(Reservation.party_size),
+        )
+        .where(
+            Reservation.reservation_date.between(first_day, last_day),
+            Reservation.status != ReservationStatus.CANCELLED,
+        )
+        .group_by(Reservation.reservation_date)
+        .order_by(Reservation.reservation_date)
+    ).all()
+    return [(day, int(count), int(people)) for day, count, people in rows]
 
 
 def update_reservation(

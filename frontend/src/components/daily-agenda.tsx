@@ -180,9 +180,9 @@ function DateControls({ selectedDate, onChange, onPrevious, onNext, onToday }: D
         <label className="relative flex h-10 min-w-0 flex-1 items-center justify-center text-center text-xs font-semibold lg:max-w-[248px] lg:text-sm"><span>{formatDate(selectedDate)}</span><input aria-label="Escolher data da agenda" className="absolute inset-0 cursor-pointer opacity-0" onChange={(event) => event.target.value && onChange(event.target.value)} type="date" value={selectedDate} /></label>
         <button aria-label="Próximo dia" className="date-button" onClick={onNext} type="button">›</button>
         <button className="secondary-button h-8 px-3 text-xs lg:h-10 lg:px-3.5 lg:text-sm" onClick={onToday} type="button">Hoje</button>
-        <div className="ml-auto hidden h-10 w-[180px] rounded-[10px] bg-[#f0ece6] p-1 lg:flex"><span className="flex flex-1 items-center justify-center rounded-lg bg-white text-[13px] font-semibold">Dia</span><span className="flex flex-1 items-center justify-center text-[13px] text-[#8d918b]">Mês</span></div>
+        <div className="ml-auto hidden h-10 w-[180px] rounded-[10px] bg-[#f0ece6] p-1 lg:flex"><span className="flex flex-1 items-center justify-center rounded-lg bg-white text-[13px] font-semibold">Dia</span><Link className="focus-ring flex flex-1 items-center justify-center rounded-lg text-[13px] text-[#8d918b]" href="/mes">Mês</Link></div>
       </div>
-      <div className="mt-2 flex h-[42px] rounded-[13px] bg-[#f0ece6] p-1 lg:hidden"><span className="flex flex-1 items-center justify-center rounded-[9px] bg-white text-xs font-semibold shadow-sm">Dia</span><span className="flex flex-1 items-center justify-center text-xs font-semibold text-[#777c75]">Mês</span></div>
+      <div className="mt-2 flex h-[42px] rounded-[13px] bg-[#f0ece6] p-1 lg:hidden"><span className="flex flex-1 items-center justify-center rounded-[9px] bg-white text-xs font-semibold shadow-sm">Dia</span><Link className="focus-ring flex flex-1 items-center justify-center rounded-[9px] text-xs font-semibold text-[#777c75]" href="/mes">Mês</Link></div>
     </div>
   );
 }

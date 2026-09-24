@@ -112,3 +112,9 @@ class ReservationResponse(ReservationFields):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MonthlyReservationSummary(BaseModel):
+    date: date
+    reservation_count: int
+    people_count: int

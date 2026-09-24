@@ -48,6 +48,7 @@ textarea.form-control { min-height: 72px; resize: vertical; }
 .reservation-arrived { border: 1.5px solid #8eb99a; background: #f0f7f1; }
 .reservation-arrived::before { position: absolute; top: 10px; bottom: 10px; left: 0; width: 5px; border-radius: 0 4px 4px 0; background: #3f7450; content: ""; }
 .arrived-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; background: #3f7450; padding: 4px 12px; color: white; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.state-divider { height: 56px; width: 4px; flex: none; border-radius: 4px; }
 .reservation-cancelled { border: 1.5px solid #de7575; background: #fff1f1; }
 .reservation-cancelled::before { position: absolute; top: 10px; bottom: 10px; left: 0; width: 5px; border-radius: 0 4px 4px 0; background: #c23b3b; content: ""; }
 .cancelled-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; background: #c23b3b; padding: 4px 12px; color: white; font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -58,6 +59,11 @@ textarea.form-control { min-height: 72px; resize: vertical; }
 .status-cancelada { background: #c23b3b; color: white; }
 .mobile-reservation { position: relative; min-height: 178px; overflow: hidden; border: 1px solid #e3ddd4; border-radius: 14px; background: white; padding: 14px; }
 .meta-chip { display: flex; min-width: 0; height: 28px; align-items: center; border-radius: 8px; background: #f4f2ed; padding: 0 10px; font-size: 11px; font-weight: 600; }
+
+@media (min-width: 64rem) {
+  .reservation-arrived::before,
+  .reservation-cancelled::before { display: none; }
+}
 .loading-dot { width: 12px; height: 12px; border-radius: 999px; background: #a64f43; animation: pulse 1s ease-in-out infinite; }
 
 @keyframes pulse { 50% { opacity: 0.35; transform: scale(0.8); } }

@@ -31,6 +31,7 @@ Arrived reservations use a pale green card/row, green accent and an explicit `Ch
 
 The daily agenda is visually ordered by operational state: scheduled/confirmed reservations first,
 arrived reservations next, and cancelled reservations last. Time remains ascending inside each group.
+Scheduled and confirmed reservations expose the compact `Chegada` action directly in the agenda.
 
 The daily agenda only exposes:
 

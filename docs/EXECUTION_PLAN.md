@@ -60,7 +60,7 @@ Goals:
 
 ### Sprint 3 — Daily agenda
 
-Status: IN PROGRESS
+Status: COMPLETED
 
 Current progress:
 
@@ -73,7 +73,7 @@ Current progress:
 - reservation confirmation with an accessible confirmation dialog
 - check-in and undo check-in from mobile agenda and reservation details, with accessible confirmation dialogs
 - reservation cancellation from details, with optional reason and an accessible confirmation dialog
-- final integrated Sprint 3 review remains pending
+- final integrated desktop/mobile review completed
 
 Goals:
 

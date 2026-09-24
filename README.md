@@ -135,6 +135,14 @@ npm run build
 - `POST /api/auth/password-reset/request`
 - `POST /api/auth/password-reset/complete`
 - `POST /api/users` (somente administrador)
+- `POST /api/reservations`
+- `GET /api/reservations?date=YYYY-MM-DD`
+- `GET /api/reservations/{id}`
+- `PATCH /api/reservations/{id}`
+- `POST /api/reservations/{id}/confirm`
+- `POST /api/reservations/{id}/check-in`
+- `POST /api/reservations/{id}/undo-check-in`
+- `POST /api/reservations/{id}/cancel`
 - `GET /health`
 
 Em produção, configure `SESSION_COOKIE_SECURE=true` e use credenciais de entrega apropriadas ao

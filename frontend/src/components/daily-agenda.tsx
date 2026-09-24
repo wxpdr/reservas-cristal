@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ReservationActionDialog } from "@/components/reservation-action-dialog";
 import { checkInReservation, getErrorMessage, getReservations, undoReservationCheckIn, type Reservation } from "@/lib/api";
@@ -42,6 +43,7 @@ const formatTime = (value: string) => value.slice(0, 5);
 const peopleLabel = (count: number) => `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
 
 export function DailyAgenda({ initialDate, onSessionExpired, reservationCreated = false }: DailyAgendaProps) {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState(() => isValidDateValue(initialDate) ? initialDate : localDateValue(new Date()));
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,7 @@ export function DailyAgenda({ initialDate, onSessionExpired, reservationCreated 
     setLoading(true);
     setError("");
     setSelectedDate(date);
+    router.replace(`/?date=${encodeURIComponent(date)}`, { scroll: false });
   }
   function retry() {
     setLoading(true);

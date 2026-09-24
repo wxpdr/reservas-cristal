@@ -90,7 +90,6 @@ table_label nullable
 origin
 notes nullable
 status
-confirmed_at nullable
 checked_in_at nullable
 cancelled_at nullable
 cancellation_reason nullable
@@ -206,10 +205,12 @@ Create an audit event for important actions:
 
 CREATE
 UPDATE
-CONFIRM
 CHECK_IN
 UNDO_CHECK_IN
 CANCEL
 TABLE_CHANGE
+
+Historical `CONFIRM` events created before confirmation was removed remain readable in the audit
+enum, but the application no longer generates them.
 
 Store relevant before/after changes when appropriate.

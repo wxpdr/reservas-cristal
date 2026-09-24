@@ -29,9 +29,9 @@ Cancelled reservations must be strongly visible using a pale red card/row, red a
 
 Arrived reservations use a pale green card/row, green accent and an explicit `Chegou` indicator.
 
-The daily agenda is visually ordered by operational state: scheduled/confirmed reservations first,
+The daily agenda is visually ordered by operational state: scheduled reservations first,
 arrived reservations next, and cancelled reservations last. Time remains ascending inside each group.
-Scheduled and confirmed reservations expose the compact `Chegada` action directly in the agenda.
+Scheduled reservations expose the compact `Chegada` action directly in the agenda.
 
 The daily agenda only exposes:
 

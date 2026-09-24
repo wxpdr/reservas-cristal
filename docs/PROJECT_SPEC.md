@@ -12,7 +12,7 @@ The system replaces the paper agenda and centralizes reservation information for
 
 ## Goal
 
-Provide a simple daily operational agenda where staff can quickly identify reservations, register new bookings, confirm customers, record arrivals, cancel bookings and consult future dates.
+Provide a simple daily operational agenda where staff can quickly identify reservations, register new bookings, record arrivals, cancel bookings and consult future dates.
 
 This is an internal system.
 
@@ -35,7 +35,7 @@ Reservation creation:
 contact -> employee registers reservation -> reservation appears automatically in the selected day.
 
 Daily operation:
-agenda -> locate reservation -> confirm / open / check-in / cancel.
+agenda -> locate reservation -> open / check-in / cancel.
 
 Future planning:
 monthly view -> inspect reservation count and people count -> open selected day.
@@ -71,10 +71,7 @@ Cancelled reservations remain available for history/audit.
 ## Statuses
 
 AGENDADA:
-reservation exists but has not been confirmed.
-
-CONFIRMADA:
-customer confirmation has been recorded.
+reservation is scheduled and the customer has not arrived yet.
 
 CHEGOU:
 customer arrival/check-in has been recorded.
@@ -83,6 +80,9 @@ CANCELADA:
 reservation has been cancelled but remains stored.
 
 Check-in may be undone.
+
+Valid transitions are `AGENDADA -> CHEGOU`, `CHEGOU -> AGENDADA`, `AGENDADA -> CANCELADA`
+and `CHEGOU -> CANCELADA`.
 
 ## Origins
 
@@ -96,17 +96,16 @@ OUTRO
 
 The daily agenda is the main operational screen.
 
-Reservations are ordered primarily by time.
+Reservations are grouped as AGENDADA, CHEGOU and CANCELADA, with ascending time inside each group.
 
 The primary list shows only:
 
 - number of people
 - customer name
 - time
+- table
 - phone
 - notes
-
-Other information remains available in reservation details.
 
 Cancelled reservations must receive strong red visual emphasis.
 

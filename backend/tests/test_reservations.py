@@ -122,12 +122,12 @@ def test_monthly_summary_groups_active_reservations_and_excludes_cancelled(
     login(client, admin)
     create_reservation(client, reservation_date="2026-09-05", party_size=4)
     create_reservation(client, reservation_date="2026-09-05", party_size=6)
-    confirmed = create_reservation(client, reservation_date="2026-09-06", party_size=3)
+    scheduled = create_reservation(client, reservation_date="2026-09-06", party_size=3)
     arrived = create_reservation(client, reservation_date="2026-09-06", party_size=5)
     cancelled = create_reservation(client, reservation_date="2026-09-05", party_size=20)
     create_reservation(client, reservation_date="2026-10-05", party_size=99)
 
-    assert client.post(f"/api/reservations/{confirmed['id']}/confirm").status_code == 200
+    assert scheduled["status"] == "AGENDADA"
     assert client.post(f"/api/reservations/{arrived['id']}/check-in").status_code == 200
     assert client.post(f"/api/reservations/{cancelled['id']}/cancel", json={}).status_code == 200
 
@@ -186,16 +186,10 @@ def test_edit_records_only_changed_fields_and_does_not_accept_status(
     assert ignored_status.status_code == 422
 
 
-def test_confirm_is_idempotent_and_audited(client: TestClient, db: Session, admin: User) -> None:
+def test_confirmation_endpoint_no_longer_exists(client: TestClient, admin: User) -> None:
     login(client, admin)
     created = create_reservation(client)
-    first = client.post(f"/api/reservations/{created['id']}/confirm")
-    second = client.post(f"/api/reservations/{created['id']}/confirm")
-
-    assert first.status_code == second.status_code == 200
-    assert first.json()["status"] == "CONFIRMADA"
-    assert first.json()["confirmed_at"] is not None
-    assert actions_for(db, created["id"]).count(ReservationAction.CONFIRM) == 1
+    assert client.post(f"/api/reservations/{created['id']}/confirm").status_code == 404
 
 
 def test_check_in_directly_and_undo_restores_scheduled(
@@ -217,18 +211,6 @@ def test_check_in_directly_and_undo_restores_scheduled(
         ReservationAction.CHECK_IN,
         ReservationAction.UNDO_CHECK_IN,
     ]
-
-
-def test_check_in_confirmed_and_undo_restores_confirmed(client: TestClient, admin: User) -> None:
-    login(client, admin)
-    created = create_reservation(client)
-    assert client.post(f"/api/reservations/{created['id']}/confirm").status_code == 200
-    assert client.post(f"/api/reservations/{created['id']}/check-in").status_code == 200
-
-    undone = client.post(f"/api/reservations/{created['id']}/undo-check-in")
-    assert undone.status_code == 200
-    assert undone.json()["status"] == "CONFIRMADA"
-    assert undone.json()["confirmed_at"] is not None
 
 
 def test_cancel_without_reason_is_soft_delete_and_audited(
@@ -262,12 +244,22 @@ def test_cancel_without_reason_is_soft_delete_and_audited(
     assert cancel_count == 1
 
 
+def test_arrived_reservation_can_be_cancelled(client: TestClient, admin: User) -> None:
+    login(client, admin)
+    created = create_reservation(client)
+    assert client.post(f"/api/reservations/{created['id']}/check-in").status_code == 200
+
+    cancelled = client.post(f"/api/reservations/{created['id']}/cancel", json={})
+
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "CANCELADA"
+
+
 def test_invalid_transitions_return_conflict(client: TestClient, admin: User) -> None:
     login(client, admin)
     created = create_reservation(client)
     assert client.post(f"/api/reservations/{created['id']}/undo-check-in").status_code == 409
     assert client.post(f"/api/reservations/{created['id']}/cancel", json={}).status_code == 200
-    assert client.post(f"/api/reservations/{created['id']}/confirm").status_code == 409
     assert client.post(f"/api/reservations/{created['id']}/check-in").status_code == 409
 
 

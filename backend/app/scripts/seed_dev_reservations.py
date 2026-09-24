@@ -16,7 +16,6 @@ from app.schemas.reservation import ReservationCreate
 from app.services.reservations import (
     cancel_reservation,
     check_in_reservation,
-    confirm_reservation,
     create_reservation,
 )
 
@@ -52,7 +51,7 @@ DEV_RESERVATIONS = (
         time(18, 30),
         ReservationOrigin.WHATSAPP,
         "Comemoração de aniversário.",
-        ReservationStatus.CONFIRMED,
+        ReservationStatus.SCHEDULED,
     ),
     DevReservation(
         "Juliana Santos",
@@ -92,7 +91,7 @@ DEV_RESERVATIONS = (
         time(20, 15),
         ReservationOrigin.PHONE,
         None,
-        ReservationStatus.CONFIRMED,
+        ReservationStatus.SCHEDULED,
     ),
     DevReservation(
         "Beatriz Nascimento",
@@ -150,9 +149,7 @@ def seed_dev_reservations(
             ),
             user,
         )
-        if item.target_status == ReservationStatus.CONFIRMED:
-            confirm_reservation(db, reservation.id, user)
-        elif item.target_status == ReservationStatus.ARRIVED:
+        if item.target_status == ReservationStatus.ARRIVED:
             check_in_reservation(db, reservation.id, user)
         elif item.target_status == ReservationStatus.CANCELLED:
             cancel_reservation(db, reservation.id, item.cancellation_reason, user)

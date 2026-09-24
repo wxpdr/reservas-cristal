@@ -102,7 +102,6 @@ class ReservationCancellation(BaseModel):
 class ReservationResponse(ReservationFields):
     id: UUID
     status: ReservationStatus
-    confirmed_at: datetime | None
     checked_in_at: datetime | None
     cancelled_at: datetime | None
     cancellation_reason: str | None

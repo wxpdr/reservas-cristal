@@ -36,7 +36,6 @@ def test_seed_creates_representative_audited_data_without_duplicates(
     )
     assert {item.status for item in reservations} == {
         ReservationStatus.SCHEDULED,
-        ReservationStatus.CONFIRMED,
         ReservationStatus.ARRIVED,
         ReservationStatus.CANCELLED,
     }
@@ -45,4 +44,4 @@ def test_seed_creates_representative_audited_data_without_duplicates(
     assert any(item.notes is not None and len(item.notes) > 80 for item in reservations)
 
     event_count = db.scalar(select(func.count()).select_from(ReservationEvent))
-    assert event_count == 13
+    assert event_count == 11

@@ -42,7 +42,6 @@ def _snapshot(reservation: Reservation) -> dict[str, Any]:
         "table_label",
         "notes",
         "status",
-        "confirmed_at",
         "checked_in_at",
         "cancelled_at",
         "cancellation_reason",
@@ -157,42 +156,11 @@ def update_reservation(
     return reservation
 
 
-def confirm_reservation(db: DatabaseSession, reservation_id: UUID, user: User) -> Reservation:
-    reservation = _get_for_update(db, reservation_id)
-    if reservation.status == ReservationStatus.CONFIRMED:
-        return reservation
-    if reservation.status != ReservationStatus.SCHEDULED:
-        raise InvalidReservationTransitionError(
-            f"Não é possível confirmar uma reserva com status {reservation.status.value}"
-        )
-
-    confirmed_at = utc_now()
-    reservation.status = ReservationStatus.CONFIRMED
-    reservation.confirmed_at = confirmed_at
-    reservation.updated_by = user.id
-    _add_event(
-        db,
-        reservation,
-        user,
-        ReservationAction.CONFIRM,
-        {
-            "status": {
-                "before": ReservationStatus.SCHEDULED.value,
-                "after": ReservationStatus.CONFIRMED.value,
-            },
-            "confirmed_at": {"before": None, "after": confirmed_at.isoformat()},
-        },
-    )
-    db.commit()
-    db.refresh(reservation)
-    return reservation
-
-
 def check_in_reservation(db: DatabaseSession, reservation_id: UUID, user: User) -> Reservation:
     reservation = _get_for_update(db, reservation_id)
     if reservation.status == ReservationStatus.ARRIVED:
         return reservation
-    if reservation.status not in {ReservationStatus.SCHEDULED, ReservationStatus.CONFIRMED}:
+    if reservation.status != ReservationStatus.SCHEDULED:
         raise InvalidReservationTransitionError(
             f"Não é possível registrar chegada com status {reservation.status.value}"
         )
@@ -227,13 +195,8 @@ def undo_check_in(db: DatabaseSession, reservation_id: UUID, user: User) -> Rese
             f"Não é possível desfazer chegada com status {reservation.status.value}"
         )
 
-    restored_status = (
-        ReservationStatus.CONFIRMED
-        if reservation.confirmed_at is not None
-        else ReservationStatus.SCHEDULED
-    )
     previous_checked_in_at = reservation.checked_in_at
-    reservation.status = restored_status
+    reservation.status = ReservationStatus.SCHEDULED
     reservation.checked_in_at = None
     reservation.updated_by = user.id
     _add_event(
@@ -244,7 +207,7 @@ def undo_check_in(db: DatabaseSession, reservation_id: UUID, user: User) -> Rese
         {
             "status": {
                 "before": ReservationStatus.ARRIVED.value,
-                "after": restored_status.value,
+                "after": ReservationStatus.SCHEDULED.value,
             },
             "checked_in_at": {
                 "before": _json_value(previous_checked_in_at),

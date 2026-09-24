@@ -81,7 +81,7 @@ are server-only secrets, and partial SMTP configuration prevents the backend fro
 
 Date: 2026-09-21
 
-Status: Accepted
+Status: Superseded by ADR-004
 
 Context:
 
@@ -102,3 +102,15 @@ Consequences:
 
 Undo check-in is deterministic and preserves prior confirmation. The `UNDO_CHECK_IN` event records
 the restored status and the cleared check-in timestamp.
+
+### ADR-004 — Remove reservation confirmation
+
+Date: 2026-09-24
+
+Status: Accepted
+
+Decision:
+
+Reservations use only `AGENDADA`, `CHEGOU` and `CANCELADA`. Undoing check-in always restores
+`AGENDADA`. Existing `CONFIRMADA` rows are migrated to `AGENDADA`; historical `CONFIRM` audit
+events remain readable, but no new confirmation event can be created.

@@ -54,7 +54,6 @@ textarea.form-control { min-height: 72px; resize: vertical; }
 .cancelled-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; background: #c23b3b; padding: 4px 12px; color: white; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .status-badge { display: inline-flex; min-height: 24px; align-items: center; border-radius: 999px; padding: 5px 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .status-agendada { background: #fff4d8; color: #7a5a16; }
-.status-confirmada { background: #eee9f8; color: #40336b; }
 .status-chegou { background: #e4f0e7; color: #2f6240; }
 .status-cancelada { background: #c23b3b; color: white; }
 .mobile-reservation { position: relative; min-height: 178px; overflow: hidden; border: 1px solid #e3ddd4; border-radius: 14px; background: white; padding: 14px; }

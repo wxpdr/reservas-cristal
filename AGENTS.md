@@ -75,7 +75,6 @@ Roles:
 
 Reservation statuses:
 - `AGENDADA`
-- `CONFIRMADA`
 - `CHEGOU`
 - `CANCELADA`
 
@@ -123,7 +122,7 @@ Cancelled reservations must never be hard-deleted.
 
 Cancellation must preserve historical information.
 
-Confirmation, check-in, cancellation and edits must be auditable.
+Check-in, cancellation and edits must be auditable.
 
 Any authorized operator may edit reservations.
 
@@ -203,7 +202,6 @@ Critical flows must be covered before production:
 - password reset
 - create reservation
 - edit reservation
-- confirm reservation
 - check-in
 - undo check-in
 - cancel reservation

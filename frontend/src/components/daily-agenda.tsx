@@ -43,7 +43,6 @@ const formatTime = (value: string) => value.slice(0, 5);
 const peopleLabel = (count: number) => `${count} ${count === 1 ? "pessoa" : "pessoas"}`;
 const statusOrder: Record<Reservation["status"], number> = {
   AGENDADA: 0,
-  CONFIRMADA: 0,
   CHEGOU: 1,
   CANCELADA: 2,
 };

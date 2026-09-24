@@ -8,7 +8,6 @@ class UserRole(StrEnum):
 
 class ReservationStatus(StrEnum):
     SCHEDULED = "AGENDADA"
-    CONFIRMED = "CONFIRMADA"
     ARRIVED = "CHEGOU"
     CANCELLED = "CANCELADA"
 

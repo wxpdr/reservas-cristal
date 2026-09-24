@@ -92,21 +92,6 @@ def update_reservation(
     return ReservationResponse.model_validate(reservation)
 
 
-@router.post("/{reservation_id}/confirm", response_model=ReservationResponse)
-def confirm_reservation(
-    reservation_id: UUID,
-    db: DatabaseSession = Depends(get_db),
-    user: User = Depends(require_operator),
-) -> ReservationResponse:
-    try:
-        reservation = reservation_service.confirm_reservation(db, reservation_id, user)
-    except reservation_service.ReservationNotFoundError:
-        raise _not_found() from None
-    except reservation_service.InvalidReservationTransitionError as error:
-        raise _invalid_transition(error) from None
-    return ReservationResponse.model_validate(reservation)
-
-
 @router.post("/{reservation_id}/check-in", response_model=ReservationResponse)
 def check_in_reservation(
     reservation_id: UUID,

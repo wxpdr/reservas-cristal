@@ -5,7 +5,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import type { Reservation } from "@/lib/api";
 
 type ReservationActionDialogProps = {
-  action: "confirm" | "check-in" | "undo-check-in";
+  action: "check-in" | "undo-check-in";
   error: string;
   onClose: () => void;
   onSubmit: () => void;
@@ -15,12 +15,6 @@ type ReservationActionDialogProps = {
 };
 
 const content = {
-  confirm: {
-    title: "Confirmar reserva?",
-    description: "Confirme os dados antes de registrar a confirmação.",
-    submit: "Confirmar reserva",
-    pending: "Confirmando…",
-  },
   "check-in": {
     title: "Confirmar chegada?",
     description: "A reserva será marcada como Chegou. Você poderá desfazer a ação logo depois.",
@@ -108,8 +102,8 @@ export function ReservationActionDialog({
         <p className="mt-4 text-sm text-[#727870]" id={descriptionId}>{labels.description}</p>
         {error ? <p className="mt-4 rounded-xl border border-[#e7b9b5] bg-[#fff1f1] p-3 text-sm text-[#8f3935]" role="alert">{error}</p> : null}
         <div className="mt-6 grid grid-cols-[112px_1fr] gap-5 sm:flex sm:justify-end sm:gap-2">
-          <button className="secondary-button focus-ring min-h-11 px-4 text-sm" disabled={pending} onClick={close} ref={cancelRef} type="button">{action === "confirm" ? "Voltar" : "Cancelar"}</button>
-          <button className={`focus-ring min-h-11 rounded-[9px] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 ${action === "confirm" ? "bg-[#a64f43]" : "bg-[#3f7450]"}`} disabled={pending} onClick={onSubmit} type="button">{pending ? labels.pending : labels.submit}</button>
+          <button className="secondary-button focus-ring min-h-11 px-4 text-sm" disabled={pending} onClick={close} ref={cancelRef} type="button">Cancelar</button>
+          <button className="focus-ring min-h-11 rounded-[9px] bg-[#3f7450] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={pending} onClick={onSubmit} type="button">{pending ? labels.pending : labels.submit}</button>
         </div>
       </section>
     </div>

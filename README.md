@@ -147,7 +147,6 @@ npm run build
 - `GET /api/reservations/monthly?year=YYYY&month=M`
 - `GET /api/reservations/{id}`
 - `PATCH /api/reservations/{id}`
-- `POST /api/reservations/{id}/confirm`
 - `POST /api/reservations/{id}/check-in`
 - `POST /api/reservations/{id}/undo-check-in`
 - `POST /api/reservations/{id}/cancel`

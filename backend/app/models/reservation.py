@@ -37,7 +37,6 @@ class Reservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=ReservationStatus.SCHEDULED,
         nullable=False,
     )
-    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     checked_in_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancellation_reason: Mapped[str | None] = mapped_column(Text)

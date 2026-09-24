@@ -63,8 +63,7 @@ export type Reservation = {
   origin: "TELEFONE" | "WHATSAPP" | "PRESENCIAL" | "TAGME" | "OUTRO";
   table_label: string | null;
   notes: string | null;
-  status: "AGENDADA" | "CONFIRMADA" | "CHEGOU" | "CANCELADA";
-  confirmed_at: string | null;
+  status: "AGENDADA" | "CHEGOU" | "CANCELADA";
   checked_in_at: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;
@@ -159,12 +158,6 @@ export function updateReservation(
   return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
-  });
-}
-
-export function confirmReservation(reservationId: string): Promise<Response> {
-  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}/confirm`, {
-    method: "POST",
   });
 }
 

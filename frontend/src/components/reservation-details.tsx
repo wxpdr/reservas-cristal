@@ -10,7 +10,6 @@ import { ReservationCancellationDialog } from "@/components/reservation-cancella
 import {
   cancelReservation,
   checkInReservation,
-  confirmReservation,
   getCurrentUser,
   getErrorMessage,
   getReservation,
@@ -28,7 +27,6 @@ type ReservationDetailsPageProps = {
 
 const statusLabels: Record<Reservation["status"], string> = {
   AGENDADA: "Agendada",
-  CONFIRMADA: "Confirmada",
   CHEGOU: "Chegou",
   CANCELADA: "Cancelada",
 };
@@ -217,7 +215,7 @@ function ReservationDetails({
         </div>
         <div className="absolute right-4 top-3 lg:static lg:mt-7 lg:text-right">
           <p className="mb-2 hidden text-[11px] font-medium text-[#727870] lg:block">Status atual</p>
-          <span className={`status-badge status-${reservation.status.toLowerCase()}`}>{cancelled ? "✕ " : ""}{statusLabels[reservation.status]}</span>
+          <span className={`status-badge status-${reservation.status.toLowerCase()}`}>{cancelled ? "✕ " : reservation.status === "CHEGOU" ? "✓ " : ""}{statusLabels[reservation.status]}</span>
         </div>
       </section>
 
@@ -274,7 +272,7 @@ function FutureActions({
   onSessionExpired: () => void;
   reservation: Reservation;
 }) {
-  type Action = "confirm" | "check-in" | "undo-check-in";
+  type Action = "check-in" | "undo-check-in";
   const [action, setAction] = useState<Action | null>(null);
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -282,13 +280,10 @@ function FutureActions({
   const [cancellationReason, setCancellationReason] = useState("");
   const [cancellationError, setCancellationError] = useState("");
   const pendingRef = useRef(false);
-  const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const checkInButtonRef = useRef<HTMLButtonElement>(null);
   const undoButtonRef = useRef<HTMLButtonElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
-  const canConfirm = reservation.status === "AGENDADA";
-  const confirmed = reservation.status === "CONFIRMADA";
-  const canCheckIn = reservation.status === "AGENDADA" || reservation.status === "CONFIRMADA";
+  const canCheckIn = reservation.status === "AGENDADA";
   const canUndoCheckIn = reservation.status === "CHEGOU";
   const cancelled = reservation.status === "CANCELADA";
 
@@ -367,11 +362,9 @@ function FutureActions({
     setActionError("");
 
     try {
-      const response = await (action === "confirm"
-        ? confirmReservation(reservation.id)
-        : action === "check-in"
-          ? checkInReservation(reservation.id)
-          : undoReservationCheckIn(reservation.id));
+      const response = await (action === "check-in"
+        ? checkInReservation(reservation.id)
+        : undoReservationCheckIn(reservation.id));
       if (response.status === 401) {
         onSessionExpired();
         return;
@@ -397,7 +390,7 @@ function FutureActions({
       }
 
       const updated = (await response.json()) as Reservation;
-      const feedback = action === "confirm" ? "Reserva confirmada com sucesso." : action === "check-in" ? "Chegada registrada com sucesso." : "Chegada desfeita com sucesso.";
+      const feedback = action === "check-in" ? "Chegada registrada com sucesso." : "Chegada desfeita com sucesso.";
       onReservationChanged(updated, feedback);
       setAction(null);
     } catch {
@@ -408,7 +401,7 @@ function FutureActions({
     }
   }
 
-  const activeTriggerRef = action === "confirm" ? confirmButtonRef : action === "undo-check-in" ? undoButtonRef : checkInButtonRef;
+  const activeTriggerRef = action === "undo-check-in" ? undoButtonRef : checkInButtonRef;
 
   return (
     <>
@@ -416,8 +409,6 @@ function FutureActions({
         <h2 className="text-[17px] font-semibold lg:sr-only">Ações</h2>
         <div className="mt-3 grid grid-cols-[92px_1fr] gap-2 lg:mt-0 lg:flex lg:w-full lg:items-center">
           <Link className="secondary-button focus-ring flex h-9 items-center justify-center text-xs lg:order-2 lg:ml-auto lg:h-10 lg:px-4 lg:text-sm" href={editHref}>Editar</Link>
-          {canConfirm ? <button className="focus-ring h-9 rounded-[9px] bg-[#a64f43] px-3 text-xs font-semibold text-white lg:order-3 lg:h-10 lg:text-sm" onClick={() => openDialog("confirm")} ref={confirmButtonRef} type="button">Confirmar reserva</button> : null}
-          {confirmed ? <button className="h-9 rounded-[9px] bg-[#a64f43] px-3 text-xs font-semibold text-white opacity-55 lg:order-3 lg:h-10 lg:text-sm" disabled type="button">Reserva confirmada</button> : null}
           {canCheckIn ? <button className="focus-ring col-span-2 h-9 rounded-[9px] bg-[#3f7450] px-3 text-xs font-semibold text-white lg:order-4 lg:h-10 lg:text-sm" onClick={() => openDialog("check-in")} ref={checkInButtonRef} type="button">Marcar chegada</button> : null}
           {canUndoCheckIn ? <button className="focus-ring col-span-2 h-9 rounded-[9px] border border-[#9eb9a6] bg-white px-3 text-xs font-semibold text-[#3f7450] lg:order-4 lg:h-10 lg:text-sm" onClick={() => openDialog("undo-check-in")} ref={undoButtonRef} type="button">Desfazer chegada</button> : null}
           {!cancelled ? <button className="focus-ring col-span-2 h-6 text-[11px] font-semibold text-[#a64f43] lg:order-1 lg:h-10 lg:rounded-[10px] lg:border lg:border-[#e7b9b5] lg:bg-white lg:px-4 lg:text-sm" onClick={openCancellationDialog} ref={cancelButtonRef} type="button">Cancelar reserva</button> : null}

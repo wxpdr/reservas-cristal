@@ -141,7 +141,7 @@ npm run build
 - `GET /api/users` (somente administrador)
 - `PATCH /api/users/{id}` (somente administrador)
 - `POST /api/users/{id}/resend-invitation` (somente administrador)
-- `GET /api/audit/reservation-events` (somente administrador)
+- `GET /api/audit/reservation-events?page=1&page_size=25` (somente administrador)
 - `POST /api/reservations`
 - `GET /api/reservations?date=YYYY-MM-DD`
 - `GET /api/reservations/monthly?year=YYYY&month=M`

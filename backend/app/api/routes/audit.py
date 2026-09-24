@@ -2,45 +2,54 @@ from datetime import date, datetime, time, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DatabaseSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.api.dependencies import require_admin
 from app.db.session import get_db
 from app.models import Reservation, ReservationEvent, User
 from app.models.enums import ReservationAction
-from app.schemas.audit import AuditEventResponse
+from app.schemas.audit import AuditEventPage, AuditEventResponse
 
 router = APIRouter(prefix="/audit", tags=["auditoria"])
 
 
-@router.get("/reservation-events", response_model=list[AuditEventResponse])
+@router.get("/reservation-events", response_model=AuditEventPage)
 def list_reservation_events(
     event_date: date | None = Query(default=None, alias="date"),
     user_id: UUID | None = None,
     action: ReservationAction | None = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=25, ge=1, le=100),
     db: DatabaseSession = Depends(get_db),
     _: User = Depends(require_admin),
-) -> list[AuditEventResponse]:
+) -> AuditEventPage:
+    filters: list[ColumnElement[bool]] = []
+    if event_date is not None:
+        start = datetime.combine(event_date, time.min)
+        filters.extend(
+            (
+                ReservationEvent.created_at >= start,
+                ReservationEvent.created_at < start + timedelta(days=1),
+            )
+        )
+    if user_id is not None:
+        filters.append(ReservationEvent.user_id == user_id)
+    if action is not None:
+        filters.append(ReservationEvent.action == action)
+
+    total = db.scalar(select(func.count()).select_from(ReservationEvent).where(*filters)) or 0
     statement = (
         select(ReservationEvent, Reservation, User)
         .join(Reservation, Reservation.id == ReservationEvent.reservation_id)
         .join(User, User.id == ReservationEvent.user_id)
-        .order_by(ReservationEvent.created_at.desc())
-        .limit(200)
+        .where(*filters)
+        .order_by(ReservationEvent.created_at.desc(), ReservationEvent.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
     )
-    if event_date is not None:
-        start = datetime.combine(event_date, time.min)
-        statement = statement.where(
-            ReservationEvent.created_at >= start,
-            ReservationEvent.created_at < start + timedelta(days=1),
-        )
-    if user_id is not None:
-        statement = statement.where(ReservationEvent.user_id == user_id)
-    if action is not None:
-        statement = statement.where(ReservationEvent.action == action)
-
-    return [
+    items = [
         AuditEventResponse(
             id=event.id,
             reservation_id=reservation.id,
@@ -55,3 +64,10 @@ def list_reservation_events(
         )
         for event, reservation, user in db.execute(statement).all()
     ]
+    return AuditEventPage(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=(total + page_size - 1) // page_size,
+    )

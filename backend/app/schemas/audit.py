@@ -18,3 +18,11 @@ class AuditEventResponse(BaseModel):
     action: ReservationAction
     changes: dict[str, Any] | None
     created_at: datetime
+
+
+class AuditEventPage(BaseModel):
+    items: list[AuditEventResponse]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int

@@ -53,6 +53,14 @@ export type AuditEvent = {
   created_at: string;
 };
 
+export type AuditEventPage = {
+  items: AuditEvent[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+
 export type Reservation = {
   id: string;
   customer_name: string;
@@ -121,11 +129,15 @@ export function getAuditEvents(filters: {
   date?: string;
   userId?: string;
   action?: string;
+  page: number;
+  pageSize: number;
 }): Promise<Response> {
   const params = new URLSearchParams();
   if (filters.date) params.set("date", filters.date);
   if (filters.userId) params.set("user_id", filters.userId);
   if (filters.action) params.set("action", filters.action);
+  params.set("page", String(filters.page));
+  params.set("page_size", String(filters.pageSize));
   const query = params.toString();
   return apiRequest(`/api/audit/reservation-events${query ? `?${query}` : ""}`);
 }

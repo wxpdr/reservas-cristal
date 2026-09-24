@@ -126,6 +126,11 @@ Goals:
 
 ### Sprint 6 — Production readiness
 
+Status: IN PROGRESS
+
+Internal production readiness is complete. External deployment, client validation and production
+release remain pending until a hosting destination, domains and provider credentials are supplied.
+
 Goals:
 
 - integration tests

@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DatabaseSession
 
+from app.core.config import get_settings
 from app.db.session import SessionLocal
 from app.models import Reservation, User
 from app.models.enums import ReservationOrigin, ReservationStatus
@@ -161,6 +162,8 @@ def seed_dev_reservations(
 
 
 def main() -> None:
+    if get_settings().app_environment == "production":
+        raise SystemExit("O seed DEV nao pode ser executado em producao.")
     parser = argparse.ArgumentParser(
         description="Ferramenta DEV manual para popular a Agenda do Dia com dados fictícios."
     )

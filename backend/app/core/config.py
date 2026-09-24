@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import AnyHttpUrl, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Reservas Cristal API"
+    app_environment: Literal["development", "test", "production"] = "development"
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/reservas_cristal"
     frontend_url: AnyHttpUrl = AnyHttpUrl("http://localhost:3000")
     session_cookie_name: str = "cristal_session"
@@ -27,6 +29,13 @@ class Settings(BaseSettings):
             raise ValueError(
                 "SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD e SMTP_FROM devem ser configurados juntos"
             )
+        if self.app_environment == "production":
+            if not self.session_cookie_secure:
+                raise ValueError("SESSION_COOKIE_SECURE deve ser true em producao")
+            if self.frontend_url.scheme != "https":
+                raise ValueError("FRONTEND_URL deve usar HTTPS em producao")
+            if not self.smtp_enabled:
+                raise ValueError("SMTP deve estar configurado em producao")
         return self
 
     @property

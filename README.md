@@ -21,6 +21,9 @@ Na raiz do repositório, copie `.env.example` para `.env` e ajuste `DATABASE_URL
 uma connection string PostgreSQL compatível com psycopg, mantendo o prefixo
 `postgresql+psycopg://`.
 
+Mantenha `APP_ENVIRONMENT=development` localmente. A configuracao e o checklist de publicacao estao
+em [`docs/PRODUCTION.md`](docs/PRODUCTION.md).
+
 ```powershell
 Copy-Item .env.example .env
 ```
@@ -152,3 +155,4 @@ npm run build
 
 Em produção, configure `SESSION_COOKIE_SECURE=true` e use credenciais de entrega apropriadas ao
 ambiente. O provider SMTP e os adaptadores de desenvolvimento implementam o mesmo `EmailSender`.
+O backend valida as configuracoes criticas ao iniciar com `APP_ENVIRONMENT=production`.

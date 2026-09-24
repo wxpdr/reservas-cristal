@@ -19,15 +19,20 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
     email = normalize_email(args.email)
+    name = args.name.strip()
+    if not name:
+        raise SystemExit("O nome do administrador e obrigatorio.")
+    settings = get_settings()
     with SessionLocal() as db:
         if db.scalar(select(User.id).where(User.email == email)) is not None:
             raise SystemExit("Já existe um usuário com este e-mail.")
-        user = User(name=args.name.strip(), email=email, role=UserRole.ADMIN, active=True)
+        user = User(name=name, email=email, role=UserRole.ADMIN, active=True)
         db.add(user)
         db.commit()
         db.refresh(user)
-        send_first_access(db, user, get_settings(), get_email_sender())
-    print("Administrador criado. Use o link de convite exibido no log acima.")
+        send_first_access(db, user, settings, get_email_sender(settings))
+    destination = "enviado por e-mail" if settings.smtp_enabled else "exibido no log"
+    print(f"Administrador criado. Convite {destination}.")
 
 
 if __name__ == "__main__":

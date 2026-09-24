@@ -71,7 +71,8 @@ Current progress:
 - responsive reservation creation connected to the reservation API
 - responsive reservation editing connected to the reservation API
 - reservation confirmation with an accessible confirmation dialog
-- check-in, undo check-in and cancellation dialogs remain pending
+- check-in and undo check-in from mobile agenda and reservation details, with accessible confirmation dialogs
+- cancellation dialog remains pending
 
 Goals:
 

@@ -102,6 +102,18 @@ export function confirmReservation(reservationId: string): Promise<Response> {
   });
 }
 
+export function checkInReservation(reservationId: string): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}/check-in`, {
+    method: "POST",
+  });
+}
+
+export function undoReservationCheckIn(reservationId: string): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}/undo-check-in`, {
+    method: "POST",
+  });
+}
+
 export function logout(): Promise<Response> {
   return apiRequest("/api/auth/logout", { method: "POST" });
 }

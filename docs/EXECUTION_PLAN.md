@@ -70,7 +70,8 @@ Current progress:
 - responsive, read-only reservation details connected to the reservation API
 - responsive reservation creation connected to the reservation API
 - responsive reservation editing connected to the reservation API
-- operational action dialogs remain pending
+- reservation confirmation with an accessible confirmation dialog
+- check-in, undo check-in and cancellation dialogs remain pending
 
 Goals:
 

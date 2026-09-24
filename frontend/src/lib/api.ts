@@ -96,6 +96,12 @@ export function updateReservation(
   });
 }
 
+export function confirmReservation(reservationId: string): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}/confirm`, {
+    method: "POST",
+  });
+}
+
 export function logout(): Promise<Response> {
   return apiRequest("/api/auth/logout", { method: "POST" });
 }

@@ -72,7 +72,8 @@ Current progress:
 - responsive reservation editing connected to the reservation API
 - reservation confirmation with an accessible confirmation dialog
 - check-in and undo check-in from mobile agenda and reservation details, with accessible confirmation dialogs
-- cancellation dialog remains pending
+- reservation cancellation from details, with optional reason and an accessible confirmation dialog
+- final integrated Sprint 3 review remains pending
 
 Goals:
 

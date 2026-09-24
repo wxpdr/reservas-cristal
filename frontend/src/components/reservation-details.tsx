@@ -6,7 +6,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AppShell } from "@/components/app-shell";
 import { ReservationActionDialog } from "@/components/reservation-action-dialog";
+import { ReservationCancellationDialog } from "@/components/reservation-cancellation-dialog";
 import {
+  cancelReservation,
   checkInReservation,
   confirmReservation,
   getCurrentUser,
@@ -276,10 +278,14 @@ function FutureActions({
   const [action, setAction] = useState<Action | null>(null);
   const [pending, setPending] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [cancellationOpen, setCancellationOpen] = useState(false);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [cancellationError, setCancellationError] = useState("");
   const pendingRef = useRef(false);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const checkInButtonRef = useRef<HTMLButtonElement>(null);
   const undoButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const canConfirm = reservation.status === "AGENDADA";
   const confirmed = reservation.status === "CONFIRMADA";
   const canCheckIn = reservation.status === "AGENDADA" || reservation.status === "CONFIRMADA";
@@ -294,6 +300,64 @@ function FutureActions({
   function closeDialog() {
     if (pendingRef.current) return;
     setAction(null);
+  }
+
+  function openCancellationDialog() {
+    setCancellationReason("");
+    setCancellationError("");
+    setCancellationOpen(true);
+  }
+
+  const closeCancellationDialog = useCallback(() => {
+    if (pendingRef.current) return;
+    setCancellationOpen(false);
+  }, []);
+
+  async function handleCancellation() {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setPending(true);
+    setCancellationError("");
+
+    try {
+      const trimmedReason = cancellationReason.trim();
+      const response = await cancelReservation(reservation.id, trimmedReason || null);
+      if (response.status === 401) {
+        onSessionExpired();
+        return;
+      }
+      if (response.status === 404) {
+        setCancellationOpen(false);
+        onNotFound();
+        return;
+      }
+      if (response.status === 409) {
+        const currentResponse = await getReservation(reservation.id);
+        if (currentResponse.ok) {
+          onReservationChanged((await currentResponse.json()) as Reservation, "Os dados da reserva foram atualizados.");
+          setCancellationOpen(false);
+          return;
+        }
+        setCancellationError("O estado desta reserva mudou. Atualize os dados antes de tentar novamente.");
+        return;
+      }
+      if (response.status === 422) {
+        setCancellationError("Revise o motivo informado e tente novamente.");
+        return;
+      }
+      if (!response.ok) {
+        setCancellationError("Não foi possível cancelar a reserva. Tente novamente.");
+        return;
+      }
+
+      onReservationChanged((await response.json()) as Reservation, "Reserva cancelada com sucesso.");
+      setCancellationOpen(false);
+    } catch {
+      setCancellationError("Não foi possível cancelar a reserva. Verifique sua conexão e tente novamente.");
+    } finally {
+      pendingRef.current = false;
+      setPending(false);
+    }
   }
 
   async function handleAction() {
@@ -356,12 +420,12 @@ function FutureActions({
           {confirmed ? <button className="h-9 rounded-[9px] bg-[#a64f43] px-3 text-xs font-semibold text-white opacity-55 lg:order-3 lg:h-10 lg:text-sm" disabled type="button">Reserva confirmada</button> : null}
           {canCheckIn ? <button className="focus-ring col-span-2 h-9 rounded-[9px] bg-[#3f7450] px-3 text-xs font-semibold text-white lg:order-4 lg:h-10 lg:text-sm" onClick={() => openDialog("check-in")} ref={checkInButtonRef} type="button">Marcar chegada</button> : null}
           {canUndoCheckIn ? <button className="focus-ring col-span-2 h-9 rounded-[9px] border border-[#9eb9a6] bg-white px-3 text-xs font-semibold text-[#3f7450] lg:order-4 lg:h-10 lg:text-sm" onClick={() => openDialog("undo-check-in")} ref={undoButtonRef} type="button">Desfazer chegada</button> : null}
-          {!cancelled ? <button className="col-span-2 h-6 text-[11px] font-semibold text-[#a64f43] disabled:cursor-not-allowed disabled:opacity-60 lg:order-1 lg:h-10 lg:rounded-[10px] lg:border lg:border-[#e7b9b5] lg:bg-white lg:px-4 lg:text-sm" disabled title="Cancelamento será implementado em uma próxima etapa" type="button">Cancelar reserva</button> : null}
+          {!cancelled ? <button className="focus-ring col-span-2 h-6 text-[11px] font-semibold text-[#a64f43] lg:order-1 lg:h-10 lg:rounded-[10px] lg:border lg:border-[#e7b9b5] lg:bg-white lg:px-4 lg:text-sm" onClick={openCancellationDialog} ref={cancelButtonRef} type="button">Cancelar reserva</button> : null}
         </div>
-        <p className="sr-only">Cancelamento ainda não está disponível nesta etapa.</p>
       </section>
 
       {action ? <ReservationActionDialog action={action} error={actionError} onClose={closeDialog} onSubmit={() => void handleAction()} pending={pending} reservation={reservation} triggerRef={activeTriggerRef} /> : null}
+      {cancellationOpen ? <ReservationCancellationDialog error={cancellationError} onClose={closeCancellationDialog} onReasonChange={setCancellationReason} onSubmit={() => void handleCancellation()} pending={pending} reason={cancellationReason} reservation={reservation} triggerRef={cancelButtonRef} /> : null}
     </>
   );
 }

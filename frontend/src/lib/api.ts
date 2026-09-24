@@ -114,6 +114,16 @@ export function undoReservationCheckIn(reservationId: string): Promise<Response>
   });
 }
 
+export function cancelReservation(
+  reservationId: string,
+  cancellationReason: string | null,
+): Promise<Response> {
+  return apiRequest(`/api/reservations/${encodeURIComponent(reservationId)}/cancel`, {
+    method: "POST",
+    body: JSON.stringify({ cancellation_reason: cancellationReason }),
+  });
+}
+
 export function logout(): Promise<Response> {
   return apiRequest("/api/auth/logout", { method: "POST" });
 }

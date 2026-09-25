@@ -27,13 +27,23 @@ def _invalid_transition(error: Exception) -> HTTPException:
     return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
 
 
+def _blocked_date() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Esta data está bloqueada para novas reservas.",
+    )
+
+
 @router.post("", response_model=ReservationResponse, status_code=status.HTTP_201_CREATED)
 def create_reservation(
     payload: ReservationCreate,
     db: DatabaseSession = Depends(get_db),
     user: User = Depends(require_operator),
 ) -> ReservationResponse:
-    reservation = reservation_service.create_reservation(db, payload, user)
+    try:
+        reservation = reservation_service.create_reservation(db, payload, user)
+    except reservation_service.ReservationDateBlockedError:
+        raise _blocked_date() from None
     return ReservationResponse.model_validate(reservation)
 
 
@@ -60,8 +70,9 @@ def list_monthly_reservations(
             date=day,
             reservation_count=reservation_count,
             people_count=people_count,
+            blocked=blocked,
         )
-        for day, reservation_count, people_count in summaries
+        for day, reservation_count, people_count, blocked in summaries
     ]
 
 
@@ -89,6 +100,8 @@ def update_reservation(
         reservation = reservation_service.update_reservation(db, reservation_id, payload, user)
     except reservation_service.ReservationNotFoundError:
         raise _not_found() from None
+    except reservation_service.ReservationDateBlockedError:
+        raise _blocked_date() from None
     return ReservationResponse.model_validate(reservation)
 
 

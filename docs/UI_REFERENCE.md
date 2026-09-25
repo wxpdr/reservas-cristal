@@ -33,6 +33,11 @@ The daily agenda is visually ordered by operational state: scheduled reservation
 arrived reservations next, and cancelled reservations last. Time remains ascending inside each group.
 Scheduled reservations expose the compact `Chegada` action directly in the agenda.
 
+The daily agenda shows a manual-block banner when the selected date is blocked. ADMIN users see
+`Bloquear dia` or `Desbloquear dia` and may provide an optional reason in the blocking dialog.
+OPERATOR users only see the blocked state and its reason when present. Existing reservations and
+their operational actions remain visible and usable.
+
 The daily agenda only exposes:
 
 people
@@ -44,3 +49,8 @@ notes
 
 Table is an operational field in the primary reservation list. An undefined table remains valid and
 is shown discreetly.
+
+The monthly view marks manually blocked dates with a lock and `Bloqueado`, without changing active
+reservation or people totals. The day remains selectable. Reservation forms warn when a newly
+selected date is blocked, retain other entered values, and disable saving until an open date is
+selected.

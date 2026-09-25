@@ -135,8 +135,8 @@ def test_monthly_summary_groups_active_reservations_and_excludes_cancelled(
 
     assert response.status_code == 200
     assert response.json() == [
-        {"date": "2026-09-05", "reservation_count": 2, "people_count": 10},
-        {"date": "2026-09-06", "reservation_count": 2, "people_count": 8},
+        {"date": "2026-09-05", "reservation_count": 2, "people_count": 10, "blocked": False},
+        {"date": "2026-09-06", "reservation_count": 2, "people_count": 8, "blocked": False},
     ]
 
 

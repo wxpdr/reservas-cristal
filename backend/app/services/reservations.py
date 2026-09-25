@@ -7,10 +7,11 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session as DatabaseSession
 
-from app.models import Reservation, ReservationEvent, User
+from app.models import Reservation, ReservationDateBlock, ReservationEvent, User
 from app.models.base import utc_now
 from app.models.enums import ReservationAction, ReservationStatus
 from app.schemas.reservation import ReservationCreate, ReservationUpdate
+from app.services.reservation_date_blocks import is_date_blocked
 
 
 class ReservationNotFoundError(Exception):
@@ -18,6 +19,10 @@ class ReservationNotFoundError(Exception):
 
 
 class InvalidReservationTransitionError(Exception):
+    pass
+
+
+class ReservationDateBlockedError(Exception):
     pass
 
 
@@ -76,6 +81,8 @@ def _get_for_update(db: DatabaseSession, reservation_id: UUID) -> Reservation:
 
 
 def create_reservation(db: DatabaseSession, payload: ReservationCreate, user: User) -> Reservation:
+    if is_date_blocked(db, payload.reservation_date):
+        raise ReservationDateBlockedError
     reservation = Reservation(
         **payload.model_dump(),
         status=ReservationStatus.SCHEDULED,
@@ -115,7 +122,7 @@ def list_reservations_by_date(db: DatabaseSession, reservation_date: date) -> li
 
 def list_monthly_reservation_summary(
     db: DatabaseSession, year: int, month: int
-) -> list[tuple[date, int, int]]:
+) -> list[tuple[date, int, int, bool]]:
     first_day = date(year, month, 1)
     last_day = date(year, month, monthrange(year, month)[1])
     rows = db.execute(
@@ -131,7 +138,16 @@ def list_monthly_reservation_summary(
         .group_by(Reservation.reservation_date)
         .order_by(Reservation.reservation_date)
     ).all()
-    return [(day, int(count), int(people)) for day, count, people in rows]
+    summaries = {day: (int(count), int(people)) for day, count, people in rows}
+    blocked_dates = set(
+        db.scalars(
+            select(ReservationDateBlock.block_date).where(
+                ReservationDateBlock.block_date.between(first_day, last_day)
+            )
+        )
+    )
+    days = sorted(set(summaries) | blocked_dates)
+    return [(day, *summaries.get(day, (0, 0)), day in blocked_dates) for day in days]
 
 
 def update_reservation(
@@ -141,6 +157,13 @@ def update_reservation(
     user: User,
 ) -> Reservation:
     reservation = _get_for_update(db, reservation_id)
+    if (
+        "reservation_date" in payload.model_fields_set
+        and payload.reservation_date != reservation.reservation_date
+        and payload.reservation_date is not None
+        and is_date_blocked(db, payload.reservation_date)
+    ):
+        raise ReservationDateBlockedError
     changes: dict[str, dict[str, Any]] = {}
     for field, value in payload.model_dump(exclude_unset=True).items():
         before = getattr(reservation, field)

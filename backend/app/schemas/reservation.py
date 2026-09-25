@@ -117,3 +117,4 @@ class MonthlyReservationSummary(BaseModel):
     date: date
     reservation_count: int
     people_count: int
+    blocked: bool

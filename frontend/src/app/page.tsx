@@ -74,6 +74,7 @@ function AuthenticatedHome() {
         initialDate={searchParams.get("date") ?? undefined}
         onSessionExpired={() => router.replace("/login")}
         reservationCreated={searchParams.get("created") === "1"}
+        userRole={user.role}
       />
     </AppShell>
   );

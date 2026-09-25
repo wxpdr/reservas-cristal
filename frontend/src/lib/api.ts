@@ -98,6 +98,13 @@ export type MonthlyReservationSummary = {
   date: string;
   reservation_count: number;
   people_count: number;
+  blocked: boolean;
+};
+
+export type ReservationDateBlockStatus = {
+  date: string;
+  blocked: boolean;
+  reason: string | null;
 };
 
 export function getCurrentUser(): Promise<Response> {
@@ -150,6 +157,23 @@ export function getReservations(date: string): Promise<Response> {
 export function getMonthlyReservations(year: number, month: number): Promise<Response> {
   const params = new URLSearchParams({ year: String(year), month: String(month) });
   return apiRequest(`/api/reservations/monthly?${params.toString()}`);
+}
+
+export function getReservationDateBlock(date: string): Promise<Response> {
+  return apiRequest(`/api/reservation-date-blocks/${encodeURIComponent(date)}`);
+}
+
+export function blockReservationDate(date: string, reason: string | null): Promise<Response> {
+  return apiRequest(`/api/reservation-date-blocks/${encodeURIComponent(date)}`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export function unblockReservationDate(date: string): Promise<Response> {
+  return apiRequest(`/api/reservation-date-blocks/${encodeURIComponent(date)}`, {
+    method: "DELETE",
+  });
 }
 
 export function getReservation(reservationId: string): Promise<Response> {

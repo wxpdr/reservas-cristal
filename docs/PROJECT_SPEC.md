@@ -56,6 +56,16 @@ table, notes and cancellation reason.
 
 There is no automatic capacity limit.
 
+An ADMIN may manually block a date from receiving new reservations. OPERATOR users can see
+the block but cannot create or remove it. The optional reason is operational information.
+
+A blocked date rejects new reservations and rejects moving an existing reservation from another
+date into it. Reservations already on the blocked date remain fully operational when their date is
+not changed: they may be edited, checked in, have check-in undone, or be cancelled. Removing the
+block immediately allows new reservations again.
+
+Manual blocking is never inferred from party size, reservation count, time, or table assignment.
+
 There are no fixed reservation time slots.
 
 Party size has no maximum.
@@ -115,6 +125,7 @@ Each day displays:
 
 - number of active reservations
 - total number of people
+- a `Bloqueado` indicator when an ADMIN manually blocked that date
 
 Cancelled reservations are excluded from monthly occupancy totals.
 

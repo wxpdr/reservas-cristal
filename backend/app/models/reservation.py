@@ -2,7 +2,18 @@ from datetime import date, datetime, time
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import JSON, Date, DateTime, Enum, ForeignKey, Integer, String, Text, Time
+from sqlalchemy import (
+    JSON,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    Time,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -67,3 +78,15 @@ class ReservationEvent(UUIDPrimaryKeyMixin, Base):
     )
 
     reservation: Mapped[Reservation] = relationship(back_populates="events")
+
+
+class ReservationDateBlock(UUIDPrimaryKeyMixin, Base):
+    __tablename__ = "reservation_date_blocks"
+    __table_args__ = (UniqueConstraint("block_date", name="uq_reservation_date_blocks_date"),)
+
+    block_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    reason: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )

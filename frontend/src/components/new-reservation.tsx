@@ -9,9 +9,11 @@ import {
   createReservation,
   getCurrentUser,
   getErrorMessage,
+  getReservationDateBlock,
   logout,
   type AuthenticatedUser,
   type ReservationCreate,
+  type ReservationDateBlockStatus,
 } from "@/lib/api";
 
 type NewReservationPageProps = { agendaDate?: string };
@@ -105,7 +107,27 @@ function NewReservationForm({ agendaDate, onSessionExpired }: { agendaDate: stri
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(agendaDate);
+  const [dateBlock, setDateBlock] = useState<ReservationDateBlockStatus | null>(null);
+  const [checkingDate, setCheckingDate] = useState(true);
   const agendaHref = `/?date=${encodeURIComponent(agendaDate)}`;
+
+  useEffect(() => {
+    let active = true;
+    const request = window.setTimeout(async () => {
+      try {
+        const response = await getReservationDateBlock(selectedDate);
+        if (response.status === 401) { onSessionExpired(); return; }
+        if (active && response.ok) setDateBlock((await response.json()) as ReservationDateBlockStatus);
+        if (active && !response.ok) setDateBlock(null);
+      } catch {
+        if (active) setDateBlock(null);
+      } finally {
+        if (active) setCheckingDate(false);
+      }
+    }, 0);
+    return () => { active = false; window.clearTimeout(request); };
+  }, [onSessionExpired, selectedDate]);
 
   function focusFirstError(validationErrors: FormErrors) {
     const firstField = Object.keys(validationErrors)[0];
@@ -117,6 +139,7 @@ function NewReservationForm({ agendaDate, onSessionExpired }: { agendaDate: stri
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submittingRef.current) return;
+    if (dateBlock?.blocked) return;
 
     const data = new FormData(event.currentTarget);
     const payload: ReservationCreate = {
@@ -189,7 +212,7 @@ function NewReservationForm({ agendaDate, onSessionExpired }: { agendaDate: stri
               <input inputMode="numeric" min="1" name="party_size" placeholder="Ex.: 4" step="1" type="number" />
             </Field>
             <Field className="col-span-1 lg:col-span-3" error={errors.reservation_date} label="Data" name="reservation_date" required>
-              <input defaultValue={agendaDate} name="reservation_date" type="date" />
+              <input name="reservation_date" onChange={(event) => { setSelectedDate(event.target.value); setDateBlock(null); setCheckingDate(true); }} type="date" value={selectedDate} />
             </Field>
             <Field className="col-span-1 lg:col-span-3" error={errors.reservation_time} label="Horário" name="reservation_time" required>
               <input name="reservation_time" type="time" />
@@ -207,13 +230,15 @@ function NewReservationForm({ agendaDate, onSessionExpired }: { agendaDate: stri
             </Field>
           </div>
 
+          {dateBlock?.blocked ? <div className="mt-3 rounded-[9px] border border-[#e7b9b5] bg-[#fff1f1] px-3 py-3 text-sm text-[#8f3935]" role="alert"><p className="font-semibold">Data bloqueada</p><p className="mt-0.5 text-xs">Esta data não aceita novas reservas. Escolha outra data para continuar.</p></div> : null}
+
           <p className="mt-3 rounded-[9px] border border-[#f1dec0] bg-[#fff4d8] px-3 py-3.5 text-[11px] font-semibold text-[#a25b1f] lg:mt-4 lg:rounded-xl lg:px-3.5 lg:text-xs"><span className="lg:hidden">20+ pessoas recebem destaque visual.</span><span className="hidden lg:inline">Reservas com 20 pessoas ou mais recebem destaque visual, mas não são bloqueadas.</span></p>
           {submitError ? <p className="mt-3 rounded-[9px] border border-[#e7b9b5] bg-[#fff1f1] px-3 py-3 text-sm text-[#8f3935]" role="alert">{submitError}</p> : null}
         </section>
 
         <div className="mt-3 flex justify-end gap-2 lg:h-16 lg:items-center">
           <Link className="secondary-button focus-ring flex h-9 items-center px-4 text-xs lg:h-10 lg:px-[18px] lg:text-sm" href={agendaHref}>Cancelar</Link>
-          <button className="primary-button h-9 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-60 lg:h-10 lg:px-[18px] lg:text-sm" disabled={submitting} type="submit">{submitting ? "Salvando…" : "Salvar reserva"}</button>
+          <button className="primary-button h-9 px-4 text-xs disabled:cursor-not-allowed disabled:opacity-60 lg:h-10 lg:px-[18px] lg:text-sm" disabled={submitting || checkingDate || Boolean(dateBlock?.blocked)} type="submit">{submitting ? "Salvando…" : "Salvar reserva"}</button>
         </div>
         <p className="mt-2 hidden min-h-[52px] items-center rounded-xl bg-[#f0ece6] px-3.5 text-xs font-medium text-[#727870] lg:flex">Ao salvar, a reserva será criada com o status Agendada.</p>
       </form>

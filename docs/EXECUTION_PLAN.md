@@ -85,6 +85,7 @@ Goals:
 - operational actions
 - responsive desktop/mobile implementation
 - cancelled reservation visual state
+- manual date blocking visibility and controls for ADMIN/OPERATOR
 
 The daily agenda displays:
 
@@ -107,6 +108,7 @@ Goals:
 - total people per day
 - navigation between month and daily agenda
 - exclude cancelled reservations from occupancy totals
+- identify manually blocked dates without changing occupancy totals
 
 ---
 

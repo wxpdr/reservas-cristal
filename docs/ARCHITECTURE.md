@@ -113,6 +113,18 @@ action
 changes JSONB
 created_at
 
+### reservation_date_blocks
+
+id
+block_date unique
+reason nullable
+created_by FK users.id
+created_at
+
+This table represents only an explicit ADMIN decision. It is queried by reservation creation,
+reservation date changes, the daily agenda, and the monthly summary. It does not model capacity
+or availability and does not prevent operational changes to reservations already on that date.
+
 ### password_tokens
 
 id
@@ -166,6 +178,10 @@ all operational actions + user management + audit history.
 
 OPERATOR:
 reservation operational actions.
+
+Both roles may read whether a date is blocked. Only ADMIN may block or unblock a date; the backend
+enforces this permission. Creation on a blocked date and moving a reservation to one return a
+domain conflict.
 
 Backend endpoints must enforce permissions.
 

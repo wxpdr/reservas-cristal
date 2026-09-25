@@ -51,7 +51,7 @@ def login(
         value=token,
         httponly=True,
         secure=settings.session_cookie_secure,
-        samesite="lax",
+        samesite="none",
         max_age=settings.session_ttl_hours * 3600,
         path="/",
     )

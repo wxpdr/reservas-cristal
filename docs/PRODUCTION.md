@@ -1,9 +1,10 @@
 # Producao e entrega
 
 O codigo esta pronto para publicacao, mas o repositorio nao define um provedor de hospedagem. Use um
-servico com HTTPS para o Next.js e outro para o processo Python, preferencialmente em subdominios do
-mesmo dominio (por exemplo, `reservas.exemplo.com` e `api.exemplo.com`) para manter o cookie
-`SameSite=Lax` coerente com a arquitetura.
+servico com HTTPS para o Next.js e outro para o processo Python. O navegador acessa a API pelo
+mesmo dominio do frontend; o Next.js encaminha as chamadas ao backend sem depender de cookies
+cross-site. A arquitetura preve `SameSite=Lax`, mas o backend atualmente emite `SameSite=None`;
+este ajuste do frontend nao altera essa configuracao do backend.
 
 ## Backend
 
@@ -30,8 +31,14 @@ Use a porta fornecida pelo provedor quando aplicavel. O health check e `GET /hea
 
 ## Frontend
 
-Configure `NEXT_PUBLIC_API_URL=https://api.exemplo.com` no ambiente de build. Execute `npm ci`,
-`npm run build` e `npm start`. Essa variavel e incorporada ao bundle durante o build.
+Configure `BACKEND_URL=https://api.exemplo.com` no ambiente do Next.js antes do build e mantenha-a
+no ambiente de execucao. Use a URL base do backend, sem o sufixo `/api`. Execute `npm ci`,
+`npm run build` e `npm start`. O rewrite de `/api/:path*` e definido durante o build; alteracoes
+nessa URL exigem novo build. A variavel e usada apenas no servidor, sem exposicao no bundle do
+navegador. `NEXT_PUBLIC_API_URL` nao e mais utilizada.
+
+Localmente, o padrao e `http://localhost:8000`. Para altera-lo, configure `BACKEND_URL` em
+`frontend/.env.local` ou no ambiente do processo Next.js.
 
 ## Primeiro uso
 
@@ -50,6 +57,6 @@ execucao quando `APP_ENVIRONMENT=production`.
 
 - definir provedor, dominios e credenciais;
 - executar migrations antes de liberar trafego;
-- validar CORS entre as duas origens HTTPS;
+- validar o proxy `/api/...` e o cookie de sessao no dominio do frontend;
 - executar o fluxo de primeiro acesso e os smoke tests acima;
 - obter a validacao do cliente e entao marcar a Sprint 6 como concluida.

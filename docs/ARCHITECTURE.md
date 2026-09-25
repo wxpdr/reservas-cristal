@@ -36,6 +36,11 @@ Responsibilities:
 
 The frontend must not be the authoritative source for business rules.
 
+Browser requests use same-origin `/api/...` URLs with `credentials: "include"`.
+Next.js rewrites `/api/:path*` to the backend configured through the server-only
+`BACKEND_URL` environment variable. This keeps session cookies on the frontend origin
+without depending on cross-site cookies.
+
 ## Backend
 
 FastAPI.

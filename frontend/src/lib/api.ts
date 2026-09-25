@@ -1,7 +1,5 @@
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
 export async function apiRequest(path: string, init: RequestInit = {}): Promise<Response> {
-  return fetch(`${apiUrl}${path}`, {
+  return fetch(path, {
     ...init,
     credentials: "include",
     headers: {

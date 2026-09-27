@@ -1,10 +1,12 @@
-from datetime import date
+from datetime import UTC, date, datetime
+from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import PasswordToken, User
+from app.models import PasswordToken, ReservationEvent, User
 from app.models.enums import PasswordTokenPurpose
 from app.services.email import InMemoryEmailSender
 
@@ -171,3 +173,71 @@ def test_audit_history_paginates_and_validates_page_size(client: TestClient, adm
     assert len(second.json()["items"]) == 2
     assert second.json()["page"] == 2
     assert client.get("/api/audit/reservation-events", params={"page_size": 101}).status_code == 422
+
+
+def test_audit_history_filters_by_sao_paulo_calendar_day(
+    client: TestClient, db: Session, admin: User
+) -> None:
+    login(client, admin)
+    sao_paulo = ZoneInfo("America/Sao_Paulo")
+    event_times = (
+        ("Anterior", datetime(2026, 9, 25, 23, 30, tzinfo=sao_paulo)),
+        ("Inicio do dia", datetime(2026, 9, 26, 0, 30, tzinfo=sao_paulo)),
+        ("Fim do dia", datetime(2026, 9, 26, 23, 30, tzinfo=sao_paulo)),
+        ("Seguinte", datetime(2026, 9, 27, 0, 30, tzinfo=sao_paulo)),
+    )
+
+    for customer_name, local_created_at in event_times:
+        created = client.post(
+            "/api/reservations",
+            json={
+                "customer_name": customer_name,
+                "phone": "11900000000",
+                "party_size": 2,
+                "reservation_date": "2026-09-26",
+                "reservation_time": "19:00",
+                "origin": "TELEFONE",
+            },
+        )
+        assert created.status_code == 201
+        event = db.scalar(
+            select(ReservationEvent).where(
+                ReservationEvent.reservation_id == UUID(created.json()["id"])
+            )
+        )
+        assert event is not None
+        event.created_at = local_created_at.astimezone(UTC)
+    db.commit()
+
+    first_page = client.get(
+        "/api/audit/reservation-events",
+        params={"date": "2026-09-26", "page": 1, "page_size": 1},
+    )
+    second_page = client.get(
+        "/api/audit/reservation-events",
+        params={"date": "2026-09-26", "page": 2, "page_size": 1},
+    )
+
+    assert first_page.status_code == second_page.status_code == 200
+    assert first_page.json()["total"] == 2
+    assert first_page.json()["total_pages"] == 2
+    assert first_page.json()["items"][0]["reservation_customer_name"] == "Fim do dia"
+    assert second_page.json()["items"][0]["reservation_customer_name"] == "Inicio do dia"
+    returned_names = {
+        first_page.json()["items"][0]["reservation_customer_name"],
+        second_page.json()["items"][0]["reservation_customer_name"],
+    }
+    assert returned_names == {"Inicio do dia", "Fim do dia"}
+    expected_utc = {
+        "Fim do dia": datetime(2026, 9, 27, 2, 30, tzinfo=UTC),
+        "Inicio do dia": datetime(2026, 9, 26, 3, 30, tzinfo=UTC),
+    }
+    for response in (first_page, second_page):
+        item = response.json()["items"][0]
+        returned_at = datetime.fromisoformat(item["created_at"].replace("Z", "+00:00"))
+        expected = expected_utc[item["reservation_customer_name"]]
+        if returned_at.tzinfo is None:
+            # SQLite strips timezone metadata from DateTime columns; PostgreSQL preserves it.
+            assert returned_at == expected.replace(tzinfo=None)
+        else:
+            assert returned_at.astimezone(UTC) == expected

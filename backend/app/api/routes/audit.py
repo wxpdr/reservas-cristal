@@ -1,5 +1,6 @@
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
@@ -13,6 +14,7 @@ from app.models.enums import ReservationAction
 from app.schemas.audit import AuditEventPage, AuditEventResponse
 
 router = APIRouter(prefix="/audit", tags=["auditoria"])
+LOCAL_TIMEZONE = ZoneInfo("America/Sao_Paulo")
 
 
 @router.get("/reservation-events", response_model=AuditEventPage)
@@ -27,11 +29,14 @@ def list_reservation_events(
 ) -> AuditEventPage:
     filters: list[ColumnElement[bool]] = []
     if event_date is not None:
-        start = datetime.combine(event_date, time.min)
+        start = datetime.combine(event_date, time.min, tzinfo=LOCAL_TIMEZONE).astimezone(UTC)
+        end = datetime.combine(
+            event_date + timedelta(days=1), time.min, tzinfo=LOCAL_TIMEZONE
+        ).astimezone(UTC)
         filters.extend(
             (
                 ReservationEvent.created_at >= start,
-                ReservationEvent.created_at < start + timedelta(days=1),
+                ReservationEvent.created_at < end,
             )
         )
     if user_id is not None:

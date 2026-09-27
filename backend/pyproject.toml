@@ -12,6 +12,7 @@ dependencies = [
   "argon2-cffi==25.1.0",
   "email-validator==2.3.0",
   "fastapi==0.116.1",
+  "httpx==0.28.1",
   "psycopg[binary]==3.2.10",
   "pydantic-settings==2.10.1",
   "sqlalchemy==2.0.43",
@@ -20,7 +21,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "httpx==0.28.1",
   "mypy==1.17.1",
   "pytest==8.4.2",
   "pytest-cov==6.3.0",

@@ -41,7 +41,9 @@ SMTP_FROM=seu-email-de-teste@gmail.com
 ```
 
 O Gmail exige autenticação em duas etapas e uma senha de app; não use a senha normal da conta.
-Se as variáveis SMTP forem omitidas, o backend usa o adaptador local que exibe o link no terminal.
+Se as variáveis de entrega forem omitidas em desenvolvimento, o backend usa o adaptador local que
+exibe o link no terminal. No Render Free, configure `BREVO_API_KEY`, `EMAIL_FROM` e opcionalmente
+`EMAIL_FROM_NAME`; a entrega ocorre pela API HTTPS da Brevo, pois portas SMTP de saída são bloqueadas.
 
 Instale o backend:
 
@@ -68,8 +70,9 @@ cd backend
 alembic upgrade head
 ```
 
-O primeiro administrador é criado por um comando local e também define a própria senha. Com SMTP
-configurado, o link temporário é enviado ao endereço do usuário; sem SMTP, ele aparece no terminal.
+O primeiro administrador é criado por um comando local e também define a própria senha. Com um
+provider de e-mail configurado, o link temporário é enviado ao endereço do usuário; sem provider em
+desenvolvimento, ele aparece no terminal.
 O token bruto nunca é salvo no banco.
 
 ```powershell
@@ -152,6 +155,7 @@ npm run build
 - `POST /api/reservations/{id}/cancel`
 - `GET /health`
 
-Em produção, configure `SESSION_COOKIE_SECURE=true` e use credenciais de entrega apropriadas ao
-ambiente. O provider SMTP e os adaptadores de desenvolvimento implementam o mesmo `EmailSender`.
+Em produção no Render, configure `SESSION_COOKIE_SECURE=true`, `BREVO_API_KEY`, `EMAIL_FROM` e
+`EMAIL_FROM_NAME`. Brevo, SMTP e os adaptadores de desenvolvimento implementam o mesmo `EmailSender`;
+Brevo tem prioridade quando configurada.
 O backend valida as configuracoes criticas ao iniciar com `APP_ENVIRONMENT=production`.

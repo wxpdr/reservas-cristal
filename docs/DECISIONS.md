@@ -55,7 +55,7 @@ operational concern without changing the authentication protocol.
 
 Date: 2026-09-18
 
-Status: Accepted
+Status: Superseded by ADR-005
 
 Context:
 
@@ -76,6 +76,33 @@ Consequences:
 
 Authentication rules and token storage remain independent from email transport. SMTP credentials
 are server-only secrets, and partial SMTP configuration prevents the backend from starting.
+
+### ADR-005 — Production email delivery through Brevo HTTPS API
+
+Date: 2026-09-26
+
+Status: Accepted
+
+Context:
+
+Render Free blocks outbound SMTP ports, so Gmail SMTP cannot deliver first-access invitations or
+password-reset messages in production.
+
+Decision:
+
+Keep the `EmailSender` boundary and use the Brevo transactional email HTTPS API in production.
+Brevo configuration takes precedence when present. The SMTP adapter remains available for
+environments that support it, while development logging and in-memory test adapters are preserved.
+
+Reason:
+
+HTTPS is supported on Render Free and changes only message delivery, leaving authentication,
+single-use tokens and frontend links unchanged.
+
+Consequences:
+
+Production requires `BREVO_API_KEY` and `EMAIL_FROM`; `EMAIL_FROM_NAME` defaults to
+`Reservas Cristal`. Provider failures raise a sanitized error without response bodies or secrets.
 
 ### ADR-003 — Status restored when undoing check-in
 

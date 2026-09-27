@@ -1,11 +1,19 @@
+import json
 from email.message import EmailMessage
 from typing import Any
 
+import httpx
 import pytest
 from pydantic import ValidationError
 
 from app.core.config import Settings
-from app.services.email import DevelopmentEmailSender, SMTPEmailSender, get_email_sender
+from app.services.email import (
+    BrevoEmailSender,
+    DevelopmentEmailSender,
+    EmailDeliveryError,
+    SMTPEmailSender,
+    get_email_sender,
+)
 
 
 class FakeSMTP:
@@ -97,3 +105,124 @@ def test_partial_smtp_configuration_is_rejected() -> None:
             smtp_host="smtp.gmail.com",
             _env_file=None,
         )
+
+
+@pytest.mark.parametrize("environment", ["development", "test", "production"])
+def test_brevo_takes_priority_over_legacy_smtp(
+    environment: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("APP_ENVIRONMENT", environment)
+    monkeypatch.setenv("BREVO_API_KEY", "test-api-key")
+    monkeypatch.setenv("EMAIL_FROM", "sender@example.com")
+    settings = Settings(
+        _env_file=None,
+        frontend_url="https://reservas.example.com",
+        session_cookie_secure=True,
+        smtp_host="smtp.example.com",
+    )
+    sender = get_email_sender(settings)
+    assert isinstance(sender, BrevoEmailSender)
+    assert sender.sender == "sender@example.com"
+    assert sender.sender_name == "Reservas Cristal"
+    assert "test-api-key" not in repr(settings)
+    assert "test-api-key" not in repr(sender)
+
+
+@pytest.mark.parametrize(
+    ("method", "path", "subject", "introduction"),
+    [
+        (
+            "send_first_access",
+            "/definir-senha",
+            "Convite de primeiro acesso — Reservas Cristal",
+            "Você recebeu um convite para acessar o Reservas Cristal. Defina sua senha:",
+        ),
+        (
+            "send_password_reset",
+            "/redefinir-senha",
+            "Redefinição de senha — Reservas Cristal",
+            "Use o link abaixo para redefinir sua senha no Reservas Cristal:",
+        ),
+    ],
+)
+def test_brevo_sends_original_content_over_https(
+    monkeypatch: pytest.MonkeyPatch,
+    method: str,
+    path: str,
+    subject: str,
+    introduction: str,
+) -> None:
+    link = f"https://reservas.example.com{path}?token=test-token"
+    requests: list[httpx.Request] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert request.method == "POST"
+        assert str(request.url) == "https://api.brevo.com/v3/smtp/email"
+        assert request.headers["api-key"] == "test-api-key"
+        assert request.headers["Content-Type"] == "application/json"
+        assert request.headers["Accept"] == "application/json"
+        assert all(value == 15.0 for value in request.extensions["timeout"].values())
+        assert json.loads(request.content.decode("utf-8")) == {
+            "sender": {"email": "sender@example.com", "name": "Cristal Pizza"},
+            "to": [{"email": "recipient@example.com"}],
+            "subject": subject,
+            "textContent": (
+                f"{introduction}\n\n{link}\n\nSe você não solicitou esta mensagem, pode ignorá-la."
+            ),
+        }
+        return httpx.Response(201, json={"messageId": "test-message"})
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr("app.services.email.httpx.post", client.post)
+        sender = BrevoEmailSender("test-api-key", "sender@example.com", "Cristal Pizza")
+        getattr(sender, method)("recipient@example.com", link)
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("status", [301, 400, 401, 403, 429, 500, 503])
+def test_brevo_http_errors_are_sanitized_without_retry_or_redirect(
+    monkeypatch: pytest.MonkeyPatch, status: int, caplog: pytest.LogCaptureFixture
+) -> None:
+    requests: list[httpx.Request] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            status,
+            text="sensitive-api-key secret-token",
+            headers={"Location": "https://other.example.com"},
+        )
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr("app.services.email.httpx.post", client.post)
+        sender = BrevoEmailSender("sensitive-api-key", "sender@example.com", "Cristal")
+        with pytest.raises(EmailDeliveryError, match=f"HTTP {status}") as error:
+            sender.send_first_access(
+                "recipient@example.com", "https://example.com?token=secret-token"
+            )
+    output = str(error.value) + caplog.text
+    assert "sensitive-api-key" not in output
+    assert "secret-token" not in output
+    assert error.value.__cause__ is None
+    assert len(requests) == 1
+
+
+@pytest.mark.parametrize("error_type", [httpx.ConnectError, httpx.ReadTimeout])
+def test_brevo_network_errors_are_sanitized(
+    monkeypatch: pytest.MonkeyPatch, error_type: type[httpx.RequestError]
+) -> None:
+    def handle(request: httpx.Request) -> httpx.Response:
+        raise error_type("sensitive-api-key secret-token", request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(handle)) as client:
+        monkeypatch.setattr("app.services.email.httpx.post", client.post)
+        sender = BrevoEmailSender("sensitive-api-key", "sender@example.com", "Cristal")
+        with pytest.raises(EmailDeliveryError, match="conectar à Brevo") as error:
+            sender.send_password_reset(
+                "recipient@example.com", "https://example.com?token=secret-token"
+            )
+    output = str(error.value)
+    assert "sensitive-api-key" not in output
+    assert "secret-token" not in output
+    assert error.value.__cause__ is None

@@ -18,16 +18,39 @@ Configure no ambiente do processo, sem versionar valores reais:
 - `SESSION_COOKIE_SECURE=true`
 - `SESSION_TTL_HOURS=12`
 - `PASSWORD_TOKEN_TTL_HOURS=24`
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` e `SMTP_FROM`
+- `BREVO_API_KEY` (segredo server-side)
+- `EMAIL_FROM` (remetente validado na Brevo)
+- `EMAIL_FROM_NAME=Reservas Cristal` (opcional)
 
-Em producao, a aplicacao recusa iniciar sem HTTPS no frontend, cookie seguro e SMTP completo. Instale
-com `python -m pip install .`, aplique `alembic upgrade head` e inicie com:
+No Render Free, a entrega usa a API HTTPS da Brevo porque conexoes SMTP de saida sao bloqueadas.
+Nao configure SMTP como transporte de producao nesse ambiente. A aplicacao recusa iniciar sem HTTPS
+no frontend, cookie seguro e configuracao Brevo completa. Instale com `python -m pip install .`,
+aplique `alembic upgrade head` e inicie com:
 
 ```sh
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers
 ```
 
 Use a porta fornecida pelo provedor quando aplicavel. O health check e `GET /health`.
+
+### Entrega de e-mails
+
+A entrega usa a [API oficial da Brevo](https://developers.brevo.com/reference/send-transac-email)
+com `POST https://api.brevo.com/v3/smtp/email`. O pacote `httpx`, ja usado nos testes, agora e
+dependencia de execucao. Remova as antigas variaveis `SMTP_*` do Render; elas nao sao necessarias.
+
+Brevo tem prioridade quando configurada, mesmo se houver configuracao SMTP antiga. Fora de
+producao, sem Brevo, SMTP completo continua disponivel; sem nenhum provedor, o adaptador de
+desenvolvimento registra os links localmente. Configuracao parcial de Brevo impede a inicializacao.
+
+O timeout e de 15 segundos por operacao de rede. Falhas de conexao e respostas HTTP sem sucesso
+geram erros de entrega sem chave, corpo da resposta ou links com tokens. Nao ha retry automatico
+nem fallback para SMTP/logs quando a Brevo falha. As rotas e os tokens permanecem inalterados.
+
+Antes de liberar, confirme o remetente e a disponibilidade de envio transacional na conta Brevo.
+Depois do deploy, valide um convite e uma recuperacao de senha com destinatarios de teste.
+Os testes automatizados simulam a API; nao comprovam a entrega real. Falhas do provedor ainda
+interrompem a operacao.
 
 ## Frontend
 
@@ -47,7 +70,8 @@ Localmente, o padrao e `http://localhost:8000`. Para altera-lo, configure `BACKE
 3. Confirme `GET /health` e publique o frontend.
 4. No terminal seguro do backend, execute
    `python -m app.scripts.create_admin --name "Nome" --email "admin@exemplo.com"`.
-5. O administrador recebe o convite por SMTP, define a propria senha e entra no sistema.
+5. O administrador recebe o convite enviado pela API HTTPS da Brevo, define a propria senha e entra
+   no sistema.
 6. Valide login, Agenda, criacao de reserva, Mes e area administrativa.
 
 O script `seed_dev_reservations` e manual, nao participa da inicializacao nem das migrations e recusa

@@ -1,5 +1,6 @@
 import json
 from email.message import EmailMessage
+from html import escape
 from typing import Any
 
 import httpx
@@ -129,30 +130,36 @@ def test_brevo_takes_priority_over_legacy_smtp(
 
 
 @pytest.mark.parametrize(
-    ("method", "path", "subject", "introduction"),
+    ("method", "path", "subject", "title", "button_label", "closing_text"),
     [
         (
             "send_first_access",
             "/definir-senha",
             "Convite de primeiro acesso — Reservas Cristal",
-            "Você recebeu um convite para acessar o Reservas Cristal. Defina sua senha:",
+            "Bem-vindo(a) ao Reservas Cristal!",
+            "Definir minha senha",
+            "Se você não esperava receber este convite, pode ignorar este e-mail.",
         ),
         (
             "send_password_reset",
             "/redefinir-senha",
             "Redefinição de senha — Reservas Cristal",
-            "Use o link abaixo para redefinir sua senha no Reservas Cristal:",
+            "Redefinição de senha",
+            "Redefinir minha senha",
+            "Se você não solicitou a redefinição da senha, nenhuma ação é necessária.",
         ),
     ],
 )
-def test_brevo_sends_original_content_over_https(
+def test_brevo_sends_responsive_html_and_plain_text_fallback(
     monkeypatch: pytest.MonkeyPatch,
     method: str,
     path: str,
     subject: str,
-    introduction: str,
+    title: str,
+    button_label: str,
+    closing_text: str,
 ) -> None:
-    link = f"https://reservas.example.com{path}?token=test-token"
+    link = f'https://reservas.example.com{path}?token=test-token&source="email"'
     requests: list[httpx.Request] = []
 
     def handle(request: httpx.Request) -> httpx.Response:
@@ -163,14 +170,33 @@ def test_brevo_sends_original_content_over_https(
         assert request.headers["Content-Type"] == "application/json"
         assert request.headers["Accept"] == "application/json"
         assert all(value == 15.0 for value in request.extensions["timeout"].values())
-        assert json.loads(request.content.decode("utf-8")) == {
-            "sender": {"email": "sender@example.com", "name": "Cristal Pizza"},
-            "to": [{"email": "recipient@example.com"}],
-            "subject": subject,
-            "textContent": (
-                f"{introduction}\n\n{link}\n\nSe você não solicitou esta mensagem, pode ignorá-la."
-            ),
+        payload = json.loads(request.content.decode("utf-8"))
+        assert payload["sender"] == {
+            "email": "sender@example.com",
+            "name": "Cristal Pizza",
         }
+        assert payload["to"] == [{"email": "recipient@example.com"}]
+        assert payload["subject"] == subject
+
+        text_content = payload["textContent"]
+        assert title in text_content
+        assert button_label in text_content
+        assert link in text_content
+        assert "Por segurança, este link é pessoal e possui prazo de validade." in text_content
+        assert closing_text in text_content
+        assert "Cristal Pizza\nReservas Cristal" in text_content
+
+        html_content = payload["htmlContent"]
+        escaped_link = escape(link, quote=True)
+        assert '<meta name="viewport"' in html_content
+        assert title in html_content
+        assert button_label in html_content
+        assert f'href="{escaped_link}"' in html_content
+        assert html_content.count(escaped_link) == 1
+        assert link not in html_content
+        assert closing_text in html_content
+        assert "Cristal Pizza" in html_content
+        assert "Reservas Cristal" in html_content
         return httpx.Response(201, json={"messageId": "test-message"})
 
     with httpx.Client(transport=httpx.MockTransport(handle)) as client:
